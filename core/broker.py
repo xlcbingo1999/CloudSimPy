@@ -1,5 +1,6 @@
 from core.job import Job
-
+import sys
+from playground.Non_DAG.utils.tools import debugPrinter
 
 class Broker(object):
     job_cls = Job
@@ -18,6 +19,7 @@ class Broker(object):
     def run(self):
         for job_config in self.job_configs:
             assert job_config.submit_time >= self.env.now
+            debugPrinter(__file__, sys._getframe(),"xiaolinchang: 当前时间: " + str(self.env.now) + str(job_config.printState()) + "\n\n")
             yield self.env.timeout(job_config.submit_time - self.env.now)
             job = Broker.job_cls(self.env, job_config)
             # print('a task arrived at time %f' % self.env.now)
