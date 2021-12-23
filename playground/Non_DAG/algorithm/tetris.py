@@ -1,5 +1,7 @@
 import numpy as np
 from core.alogrithm import Algorithm
+import sys
+from playground.Non_DAG.utils.tools import debugPrinter
 
 
 class Tetris(Algorithm):
@@ -23,7 +25,12 @@ class Tetris(Algorithm):
                 if machine.accommodate(task):
                     valid_pairs.append((machine, task))
         if len(valid_pairs) == 0:
+            debugPrinter(__file__, sys._getframe(), "当前时间: {0}; 等待队列: {1}; 候选机器和task: [{2}, {3}] ".format(clock, [(task.task_index, task.task_config.instances_number - task.next_instance_pointer) for task in tasks], None, None))
             return None, None
         pair_index = Tetris.calculate_alignment(valid_pairs)
         pair = valid_pairs[pair_index]
+        if pair[0] != None and pair[1] != None:
+            debugPrinter(__file__, sys._getframe(), "当前时间: {0}; 等待队列: {1}; 候选机器和task: [{2}, {3}] ".format(clock, [(task.task_index, task.task_config.instances_number - task.next_instance_pointer) for task in tasks], pair[0].id, pair[1].task_index))
+        else:
+            debugPrinter(__file__, sys._getframe(), "当前时间: {0}; 等待队列: {1}; 候选机器和task: [{2}, {3}] ".format(clock, [(task.task_index, task.task_config.instances_number - task.next_instance_pointer) for task in tasks], pair[0], pair[1]))
         return pair[0], pair[1]

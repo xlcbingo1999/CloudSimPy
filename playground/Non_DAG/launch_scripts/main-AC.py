@@ -5,7 +5,9 @@ import tensorflow as tf
 from multiprocessing import Process, Manager
 import sys
 
-sys.path.append('..')
+# append是往后放，insert可以选择放的位置，一般可以用于解决冲突
+# sys.path.append('..')
+sys.path.insert(0, '/home/linchangxiao/labInDiWu/CloudSimPy')
 
 from core.machine import MachineConfig
 from playground.Non_DAG.algorithm.random_algorithm import RandomAlgorithm
@@ -31,7 +33,7 @@ machines_number = 5
 jobs_len = 10
 n_iter = 100
 n_episode = 12
-jobs_csv = '../jobs_files/jobs.csv'
+jobs_csv = '/home/linchangxiao/labInDiWu/CloudSimPy/playground/Non_DAG/jobs_files/jobs.csv'
 
 brain = Brain(9)
 reward_giver = AverageCompletionRewardGiver()

@@ -17,6 +17,7 @@ class Scheduler(object):
             if machine is None or task is None:
                 break
             else:
+                # 这里每次只会申请一个实例，所以需要while True
                 task.start_task_instance(machine)
 
     def run(self):

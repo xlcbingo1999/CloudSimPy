@@ -3,9 +3,10 @@ playground/.ipynb_checkpoints
 playground/notebooks
 playground/DAG/launch_scripts/agents/
 playground/DAG/launch_scripts/tensorboard/
+playground/DAG/launch_scripts/results/
 playground/Non_DAG/launch_scripts/agents/
 playground/Non_DAG/launch_scripts/tensorboard/
-
+playground/Non_DAG/launch_scripts/results/
 
 .DS_Store
 

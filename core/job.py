@@ -1,5 +1,6 @@
 from core.config import *
-
+import sys
+from playground.Non_DAG.utils.tools import debugPrinter
 
 class Task(object):
     def __init__(self, env, job, task_config):
@@ -235,7 +236,7 @@ class TaskInstance(object):
         # self.cluster.running_tasks.append(self)
         # self.machine.run(self)
         yield self.env.timeout(self.duration)
-
+        debugPrinter(__file__, sys._getframe(), "当前时间: {0}; 完成task的一个实例: {1}; 该task的实例数量: {2}".format(self.env.now, self.task.task_index, self.task.task_config.instances_number))
         self.finished = True
         self.finished_timestamp = self.env.now
 

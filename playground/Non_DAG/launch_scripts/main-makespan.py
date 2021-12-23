@@ -50,6 +50,7 @@ if not os.path.isdir(model_dir):
 agent = Agent(name, brain, 1, reward_to_go=True, nn_baseline=True, normalize_advantages=True,
               model_save_path='%s/model.ckpt' % model_dir)
 
+# xiaolinchang: without GPU, cpu: 64 mem: 1 disk: 1
 machine_configs = [MachineConfig(64, 1, 1) for i in range(machines_number)]
 csv_reader = CSVReader(jobs_csv)
 jobs_configs = csv_reader.generate(0, jobs_len)
