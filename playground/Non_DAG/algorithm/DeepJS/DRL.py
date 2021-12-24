@@ -1,5 +1,8 @@
 import tensorflow as tf
 import numpy as np
+import sys
+from playground.Non_DAG.utils.tools import debugPrinter
+
 
 tf.enable_eager_execution()
 
@@ -38,6 +41,7 @@ class RLAlgorithm(object):
                     all_candidates.append((machine, task))
         if len(all_candidates) == 0:
             self.current_trajectory.append(Node(None, None, self.reward_giver.get_reward(), clock))
+            debugPrinter(__file__, sys._getframe(), "当前时间: {0}; 等待队列: {1}; 候选机器和task: [{2}, {3}] ".format(clock, [(task.task_index, task.task_config.instances_number - task.next_instance_pointer) for task in tasks], None, None))
             return None, None
         else:
             features = self.extract_features(all_candidates)
@@ -47,5 +51,5 @@ class RLAlgorithm(object):
 
             node = Node(features, pair_index, 0, clock)
             self.current_trajectory.append(node)
-
+        debugPrinter(__file__, sys._getframe(), "当前时间: {0}; 等待队列: {1}; 候选机器和task: [{2}, {3}] ".format(clock, [(task.task_index, task.task_config.instances_number - task.next_instance_pointer) for task in tasks], all_candidates[pair_index][0].id, all_candidates[pair_index][1].task_index))
         return all_candidates[pair_index]
