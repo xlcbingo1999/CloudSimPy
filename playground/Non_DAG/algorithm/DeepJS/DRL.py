@@ -26,8 +26,9 @@ class RLAlgorithm(object):
     def extract_features(self, valid_pairs):
         features = []
         for machine, task in valid_pairs:
+            # 6维向量[machine.cpu, machine.memory, task.cpu, task.memory, task.duration, task.waiting_task_instances_number]
             features.append([machine.cpu, machine.memory] + self.features_extract_func(task))
-        features = self.features_normalize_func(features)
+        features = self.features_normalize_func(features) # 这里归一化参数如何设置的？
         return features
 
     def __call__(self, cluster, clock):
@@ -46,8 +47,11 @@ class RLAlgorithm(object):
         else:
             features = self.extract_features(all_candidates)
             features = tf.convert_to_tensor(features, dtype=np.float32)
+            debugPrinter(__file__, sys._getframe(), "所有候选集构成的维度: {0}".format(features.get_shape().as_list()))
             logits = self.agent.brain(features)
+            debugPrinter(__file__, sys._getframe(), "经过Brain后维度: {0}".format(logits.get_shape().as_list()))
             pair_index = tf.squeeze(tf.multinomial(logits, num_samples=1), axis=1).numpy()[0]
+            debugPrinter(__file__, sys._getframe(), "Action: (machine: {0}; task: {1})".format(all_candidates[pair_index][0].id, all_candidates[pair_index][1].task_index))
 
             node = Node(features, pair_index, 0, clock)
             self.current_trajectory.append(node)

@@ -2,7 +2,7 @@ import os
 import time
 import numpy as np
 import tensorflow as tf
-from multiprocessing import Process, Manager
+# from multiprocessing import Process, Manager
 import sys
 
 # append是往后放，insert可以选择放的位置，一般可以用于解决冲突
@@ -10,7 +10,7 @@ import sys
 sys.path.insert(0, '/home/linchangxiao/labInDiWu/CloudSimPy')
 
 from core.machine import MachineConfig
-from playground.Non_DAG.utils.tools import debugPrinter
+from playground.Non_DAG.utils.tools import debugPrinter, infoPrinter
 from playground.Non_DAG.algorithm.DeepJS.DRL import RLAlgorithm
 from playground.Non_DAG.algorithm.DeepJS.agent import Agent
 from playground.Non_DAG.algorithm.DeepJS.brain import BrainSmall
@@ -21,14 +21,14 @@ from playground.Non_DAG.utils.feature_functions import features_extract_func, fe
 from playground.Non_DAG.utils.tools import multiprocessing_run, average_completion, average_slowdown
 from playground.Non_DAG.utils.episode import Episode
 
-os.environ['CUDA_VISIBLE_DEVICES'] = ''
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 np.random.seed(41)
 tf.random.set_random_seed(41)
 
 machines_number = 5
-jobs_len = 10
-n_iter = 1
+jobs_len = 100
+n_iter = 10
 n_episode = 1
 jobs_csv = '/home/linchangxiao/labInDiWu/CloudSimPy/playground/Non_DAG/jobs_files/jobs.csv'
 
@@ -54,29 +54,41 @@ jobs_configs = csv_reader.generate(0, jobs_len)
 for itr in range(n_iter):
     tic = time.time()
     print("********** Iteration %i ************" % itr)
-    processes = []
+    # 多进程和Tensorflow GPU冲突，已解决
+    # processes = []
 
-    manager = Manager()
-    trajectories = manager.list([])
-    makespans = manager.list([])
-    average_completions = manager.list([])
-    average_slowdowns = manager.list([])
+    # manager = Manager()
+    # trajectories = manager.list([])
+    # makespans = manager.list([])
+    # average_completions = manager.list([])
+    # average_slowdowns = manager.list([])
 
-    for i in range(n_episode):
-        algorithm = RLAlgorithm(agent, reward_giver, features_extract_func=features_extract_func,
+    # for i in range(n_episode):
+    #     algorithm = RLAlgorithm(agent, reward_giver, features_extract_func=features_extract_func,
+    #                             features_normalize_func=features_normalize_func)
+    #     episode = Episode(machine_configs, jobs_configs, algorithm, None)
+    #     algorithm.reward_giver.attach(episode.simulation)
+    #     p = Process(target=multiprocessing_run,
+    #                 args=(episode, trajectories, makespans, average_completions, average_slowdowns))
+
+    #     processes.append(p)
+
+    # for p in processes:
+    #     p.start()
+
+    # for p in processes:
+    #     p.join()
+
+    trajectories = list()
+    makespans = list()
+    average_completions = list()
+    average_slowdowns = list()
+
+    algorithm = RLAlgorithm(agent, reward_giver, features_extract_func=features_extract_func,
                                 features_normalize_func=features_normalize_func)
-        episode = Episode(machine_configs, jobs_configs, algorithm, None)
-        algorithm.reward_giver.attach(episode.simulation)
-        p = Process(target=multiprocessing_run,
-                    args=(episode, trajectories, makespans, average_completions, average_slowdowns))
-
-        processes.append(p)
-
-    for p in processes:
-        p.start()
-
-    for p in processes:
-        p.join()
+    episode = Episode(machine_configs, jobs_configs, algorithm, None)
+    algorithm.reward_giver.attach(episode.simulation)
+    multiprocessing_run(episode, trajectories, makespans, average_completions, average_slowdowns)
 
     agent.log('makespan', np.mean(makespans), agent.global_step)
     agent.log('average_completions', np.mean(average_completions), agent.global_step)
@@ -84,7 +96,7 @@ for itr in range(n_iter):
 
     toc = time.time()
 
-    debugPrinter(__file__, sys._getframe(), "makespans平均值: {0}; duration: {1}; 平均完成时间: {2}; 平均slowdowns:{3}".format(np.mean(makespans), toc - tic, np.mean(average_completions), np.mean(average_slowdowns)))
+    infoPrinter(__file__, sys._getframe(), "makespans平均值: {0}; duration: {1}; 平均完成时间: {2}; 平均slowdowns:{3}".format(np.mean(makespans), toc - tic, np.mean(average_completions), np.mean(average_slowdowns)))
     
     all_observations = []
     all_actions = []
