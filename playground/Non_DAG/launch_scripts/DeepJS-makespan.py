@@ -10,7 +10,7 @@ import sys
 sys.path.insert(0, '/home/linchangxiao/labInDiWu/CloudSimPy')
 
 from core.machine import MachineConfig
-from playground.Non_DAG.utils.tools import debugPrinter, infoPrinter
+from playground.Non_DAG.utils.tools import debugPrinter, infoPrinter, mustPrinter
 from playground.Non_DAG.algorithm.DeepJS.DRL import RLAlgorithm
 from playground.Non_DAG.algorithm.DeepJS.agent import Agent
 from playground.Non_DAG.algorithm.DeepJS.brain import BrainSmall
@@ -28,8 +28,8 @@ tf.random.set_random_seed(41)
 
 machines_number = 5
 jobs_len = 100
-n_iter = 10
-n_episode = 1
+n_iter = 100
+n_episode = 4
 jobs_csv = '/home/linchangxiao/labInDiWu/CloudSimPy/playground/Non_DAG/jobs_files/jobs.csv'
 
 brain = BrainSmall(6)
@@ -84,11 +84,12 @@ for itr in range(n_iter):
     average_completions = list()
     average_slowdowns = list()
 
-    algorithm = RLAlgorithm(agent, reward_giver, features_extract_func=features_extract_func,
-                                features_normalize_func=features_normalize_func)
-    episode = Episode(machine_configs, jobs_configs, algorithm, None)
-    algorithm.reward_giver.attach(episode.simulation)
-    multiprocessing_run(episode, trajectories, makespans, average_completions, average_slowdowns)
+    for i in range(n_episode):
+        algorithm = RLAlgorithm(agent, reward_giver, features_extract_func=features_extract_func,
+                                    features_normalize_func=features_normalize_func)
+        episode = Episode(machine_configs, jobs_configs, algorithm, None)
+        algorithm.reward_giver.attach(episode.simulation)
+        multiprocessing_run(episode, trajectories, makespans, average_completions, average_slowdowns)
 
     agent.log('makespan', np.mean(makespans), agent.global_step)
     agent.log('average_completions', np.mean(average_completions), agent.global_step)
@@ -96,16 +97,28 @@ for itr in range(n_iter):
 
     toc = time.time()
 
-    infoPrinter(__file__, sys._getframe(), "makespans平均值: {0}; duration: {1}; 平均完成时间: {2}; 平均slowdowns:{3}".format(np.mean(makespans), toc - tic, np.mean(average_completions), np.mean(average_slowdowns)))
+    mustPrinter(__file__, sys._getframe(), "makespans平均值: {0}; duration: {1}; 平均完成时间: {2}; 平均slowdowns:{3}".format(np.mean(makespans), toc - tic, np.mean(average_completions), np.mean(average_slowdowns)))
     
     all_observations = []
     all_actions = []
     all_rewards = []
+    # 这里因为没有并行了，所以需要
     for trajectory in trajectories:
+        infoPrinter(__file__, sys._getframe(),"检查trajectories: size: {0}".format(len(trajectories)))
         observations = []
         actions = []
         rewards = []
         for node in trajectory:
+            if node.observation != None and node.action != None:
+                infoPrinter(__file__, sys._getframe(),"\tnode: observation: {0}; action: {1}; reward: {2}"
+                .format(node.observation.get_shape().as_list(), # (候选index, 6)
+                        node.action, # (选择的index)
+                        node.reward)) # (0表示选择了内容， -1表示没选)
+            else:
+                infoPrinter(__file__, sys._getframe(),"\tnode: observation: {0}; action: {1}; reward: {2}"
+                .format(node.observation, 
+                        node.action,
+                        node.reward))
             observations.append(node.observation)
             actions.append(node.action)
             rewards.append(node.reward)

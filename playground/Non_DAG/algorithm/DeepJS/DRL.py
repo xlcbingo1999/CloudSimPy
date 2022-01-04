@@ -53,7 +53,7 @@ class RLAlgorithm(object):
             pair_index = tf.squeeze(tf.multinomial(logits, num_samples=1), axis=1).numpy()[0]
             debugPrinter(__file__, sys._getframe(), "Action: (machine: {0}; task: {1})".format(all_candidates[pair_index][0].id, all_candidates[pair_index][1].task_index))
 
-            node = Node(features, pair_index, 0, clock)
+            node = Node(features, pair_index, 0, clock) # 四元组, 用于经验回放
             self.current_trajectory.append(node)
         debugPrinter(__file__, sys._getframe(), "当前时间: {0}; 等待队列: {1}; 候选机器和task: [{2}, {3}] ".format(clock, [(task.task_index, task.task_config.instances_number - task.next_instance_pointer) for task in tasks], all_candidates[pair_index][0].id, all_candidates[pair_index][1].task_index))
         return all_candidates[pair_index]

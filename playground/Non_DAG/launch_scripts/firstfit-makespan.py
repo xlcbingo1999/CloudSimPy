@@ -11,12 +11,12 @@ from playground.Non_DAG.utils.feature_functions import features_extract_func, fe
 from playground.Non_DAG.utils.tools import average_completion, average_slowdown
 from playground.Non_DAG.utils.episode import Episode
 
-machines_number = 5
+machines_number = 2
 jobs_len = 10
 jobs_csv = '/home/linchangxiao/labInDiWu/CloudSimPy/playground/Non_DAG/jobs_files/jobs.csv'
 
 
-machine_configs = [MachineConfig(64, 1, 1) for i in range(machines_number)]
+machine_configs = [MachineConfig(10, 1, 1) for i in range(machines_number)]
 csv_reader = CSVReader(jobs_csv)
 jobs_configs = csv_reader.generate(0, jobs_len)
 

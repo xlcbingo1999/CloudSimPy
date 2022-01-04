@@ -2,7 +2,7 @@ import time
 import numpy as np
 import tensorflow as tf
 
-debugLevel = "info"
+debugLevel = "debug"
 
 def average_completion(exp):
     completion_time = 0
@@ -56,8 +56,21 @@ def infoPrinter(file, lineno, data=None):
     :param data: 需要输出的信息
     :return:
     """
-    if debugLevel == "info":
+    if debugLevel == "info" or debugLevel == "debug":
         fileName = file.split('/')[-1]
         lineno = lineno.f_lineno
 
         print(f'[{fileName} {lineno}] {data}')
+
+def mustPrinter(file, lineno, data=None):
+    """
+    输出带有文件名和行号的调试信息
+    :param file: 对应__file__变量
+    :param lineno: 对应sys._getframe().f变量
+    :param data: 需要输出的信息
+    :return:
+    """
+    fileName = file.split('/')[-1]
+    lineno = lineno.f_lineno
+
+    print(f'[{fileName} {lineno}] {data}')

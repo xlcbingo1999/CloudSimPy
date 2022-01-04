@@ -2,6 +2,8 @@ import time
 import copy
 import numpy as np
 import tensorflow as tf
+import sys
+from playground.Non_DAG.utils.tools import debugPrinter, infoPrinter
 
 
 class Agent(object):
@@ -101,7 +103,7 @@ class Agent(object):
         else:
             q_n = []
             for q in q_s:
-                q_n.append([q[0]] * len(q))
+                q_n.append([q[0]] * len(q)) # 全部填充了q[0]
             return q_n
 
     def _compute_advantage(self, q_n):
@@ -122,8 +124,7 @@ class Agent(object):
                 while len(adv) < max_length:
                     adv.append(0)
             adv_n = np.array(adv_n)
-            adv_n = adv_n - adv_n.mean(axis=0)
-
+            adv_n = adv_n - adv_n.mean(axis=0) # 计算列均值，得到自身，所以此时adv_n必然为0            
             adv_n__ = []
             for i in range(adv_n.shape[0]):
                 original_length = len(q_n[i])
@@ -146,7 +147,9 @@ class Agent(object):
                 adv_n: shape: (...).
         """
         q_n = self._sum_of_rewards(rewards_n)
+        infoPrinter(__file__, sys._getframe(), "实际返回q_n: {0}".format(q_n))
         adv_n = self._compute_advantage(q_n)
+        infoPrinter(__file__, sys._getframe(), "未计算前返回值adv_n: {0}".format(adv_n))
 
         # Advantage Normalization
         if self.normalize_advantages:
@@ -166,12 +169,13 @@ class Agent(object):
                     advantages__.append((advantage - mean) / (std + np.finfo(np.float32).eps))
                 adv_n__.append(advantages__)
             adv_n = adv_n__
+        infoPrinter(__file__, sys._getframe(), "实际返回adv_n: {0}".format(adv_n))
         return q_n, adv_n
 
     def _loss(self, X, y, adv):
-        logits = self.brain(X)
-        logprob = - tf.losses.sparse_softmax_cross_entropy(labels=y, logits=logits)
-        return logprob * adv
+        logits = self.brain(X) # 用当前的状态做出的决定
+        logprob = - tf.losses.sparse_softmax_cross_entropy(labels=y, logits=logits) # 过往很多次的状态
+        return logprob * adv # adv 目前是0, 所以肯定最后得到的是0. 所以必须要执行多次
 
     def update_parameters(self, all_observations, all_actions, all_advantages):
         """
@@ -209,7 +213,7 @@ class Agent(object):
                 cnt += 1
             if len(grads_by_trajectory) > 0:
                 self.optimize(grads_by_trajectory)
-
+        
         self.log('loss', np.mean(loss_values), self.global_step)
         self.log('adv', np.mean(advantages__), self.global_step)
 
