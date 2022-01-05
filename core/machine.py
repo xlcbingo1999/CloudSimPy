@@ -1,5 +1,6 @@
 from enum import Enum
-
+import sys
+from playground.Non_DAG.utils.tools import debugPrinter
 
 class MachineConfig(object):
     idx = 0
@@ -48,6 +49,7 @@ class Machine(object):
         self.cpu += task_instance.cpu
         self.memory += task_instance.memory
         self.disk += task_instance.disk
+        self.task_instances.remove(task_instance) 
         self.machine_door = MachineDoor.TASK_OUT
 
     @property

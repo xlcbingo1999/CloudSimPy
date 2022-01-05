@@ -19,8 +19,8 @@ class Broker(object):
     def run(self):
         for job_config in self.job_configs:
             assert job_config.submit_time >= self.env.now
-            infoPrinter(__file__, sys._getframe(),"xiaolinchang用户提交任务: 当前时间: " + str(self.env.now) + str(job_config.printState()) + "\n\n")
             yield self.env.timeout(job_config.submit_time - self.env.now)
+            infoPrinter(__file__, sys._getframe(),"xiaolinchang用户提交任务: 当前时间: " + str(self.env.now) + str(job_config.printState()) + "\n\n")
             job = Broker.job_cls(self.env, job_config)
             # print('a task arrived at time %f' % self.env.now)
             self.cluster.add_job(job)

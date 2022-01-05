@@ -11,7 +11,7 @@ from playground.Non_DAG.utils.feature_functions import features_extract_func, fe
 from playground.Non_DAG.utils.tools import average_completion, average_slowdown
 from playground.Non_DAG.utils.episode import Episode
 
-machines_number = 2
+machines_number = 16
 jobs_len = 10
 jobs_csv = '/home/linchangxiao/labInDiWu/CloudSimPy/playground/Non_DAG/jobs_files/jobs.csv'
 

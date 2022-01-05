@@ -1,3 +1,4 @@
+from simpy import Interrupt
 from core.config import *
 import sys
 from playground.Non_DAG.utils.tools import debugPrinter, infoPrinter
@@ -11,11 +12,13 @@ class Task(object):
         self._ready = False
         self._parents = None
 
-        self.task_instances = []
+        # 注意，下面三个list中的TaskInstance是共享的，不要轻易delete
+        # TODO(xiaolinchang): 更改成deepCopy版本
+        self.task_instances = [] 
         task_instance_config = TaskInstanceConfig(task_config)
         for task_instance_index in range(int(self.task_config.instances_number)):
-            self.task_instances.append(TaskInstance(self.env, self, task_instance_index, task_instance_config))
-        self.next_instance_pointer = 0
+            tempInstance = TaskInstance(self.env, self, task_instance_index, task_instance_config)
+            self.task_instances.append(tempInstance)
 
     @property
     def id(self):
@@ -44,7 +47,7 @@ class Task(object):
     def running_task_instances(self):
         ls = []
         for task_instance in self.task_instances:
-            if task_instance.started and not task_instance.finished:
+            if task_instance.started and not task_instance.finished and not task_instance.paused:
                 ls.append(task_instance)
         return ls
 
@@ -55,11 +58,23 @@ class Task(object):
             if task_instance.finished:
                 ls.append(task_instance)
         return ls
+    
+    @property
+    def waiting_task_instances(self):
+        ls = []
+        for task_instance in self.task_instances:
+            if task_instance.paused and not task_instance.finished:
+                ls.append(task_instance)
+        return ls
 
     # the most heavy
-    def start_task_instance(self, machine):
-        self.task_instances[self.next_instance_pointer].schedule(machine)
-        self.next_instance_pointer += 1
+    def start_task_instance(self, machine, instance):
+        if instance in self.waiting_task_instances:
+            instance.schedule(machine)
+
+    def pause_task_instance(self, instance):
+        if instance in self.running_task_instances:
+            instance.interruptstop()
 
     @property
     def started(self):
@@ -70,11 +85,11 @@ class Task(object):
 
     @property
     def waiting_task_instances_number(self):
-        return self.task_config.instances_number - self.next_instance_pointer
+        return len(self.waiting_task_instances)
 
     @property
     def has_waiting_task_instances(self):
-        return self.task_config.instances_number > self.next_instance_pointer
+        return len(self.waiting_task_instances) > 0
 
     @property
     def finished(self):
@@ -87,15 +102,6 @@ class Task(object):
         if len(self.running_task_instances) != 0:
             return False
         return True
-
-    @property
-    def started_timestamp(self):
-        t = None
-        for task_instance in self.task_instances:
-            if task_instance.started_timestamp is not None:
-                if (t is None) or (t > task_instance.started_timestamp):
-                    t = task_instance.started_timestamp
-        return t
 
     @property
     def finished_timestamp(self):
@@ -188,15 +194,6 @@ class Job(object):
         return True
 
     @property
-    def started_timestamp(self):
-        t = None
-        for task in self.tasks:
-            if task.started_timestamp is not None:
-                if (t is None) or (t > task.started_timestamp):
-                    t = task.started_timestamp
-        return t
-
-    @property
     def finished_timestamp(self):
         if not self.finished:
             return None
@@ -223,29 +220,115 @@ class TaskInstance(object):
         self.new = True
 
         self.started = False
+        self.paused = True
         self.finished = False
-        self.started_timestamp = None
+
+        self.first_started_timestamp = None
+        self.last_started_timestamp = None # 只有调度上去才会开始计算，重新调度会更新
+        self.last_checkpoint_timestamp = None
         self.finished_timestamp = None
+        
+        self.activated_time_length = 0
+
+        self.preempt_count = 0
+        self.resume_count = 0
 
     @property
     def id(self):
         return str(self.task.id) + '-' + str(self.task_instance_index)
 
+    @property
+    def pending_time_length(self):
+        # debugPrinter(__file__, sys._getframe(), "xiaolinchang: check {0}-{1}-{2}".format(self.env.now, self.last_started_timestamp, self.activated_time_length))
+        if self.last_started_timestamp is None:
+            return 0
+        else:
+            # TODO(xiaolinchang): 这里有点危险，基于的假设是job的所有tasks都在同一时刻到来，不断地进行向上检索
+            return self.env.now - self.task.job.job_config.submit_time - self.activated_time_length
+
+    @property
+    def last_pending_time_length(self):
+        # 只有当前是pending状态才能计算该值
+        if self.paused is False or self.last_checkpoint_timestamp is None:
+            raise RuntimeError('此时不处于paused状态 {0}'.format(self.info))
+        else:
+            return self.env.now - self.last_checkpoint_timestamp
+
+    @property
+    def last_active_time_length(self):
+        if self.started is False or self.last_started_timestamp is None:
+            raise RuntimeError('此时不处于started状态 {0}'.format(self.info))
+        else:
+            return self.env.now - self.last_started_timestamp
+
+    @property
+    def info(self):
+        taskInstanceStr = 'jobID-taskID-instanceID: ' + self.id + '; '
+        startedStr = 'isStart: ' + str(self.started) + '; '
+        pausedStr = 'isPaused: ' + str(self.paused) + '; '
+        startTimeStr = 'last_started_timestamp: ' + str(self.last_started_timestamp if self.last_started_timestamp is not None else 'None') + '; '
+        lastCheckTimeStr = 'last_checkpoint_timestamp: ' + str(self.last_checkpoint_timestamp if self.last_checkpoint_timestamp is not None else 'None') + '; '
+        activedTimeStr = 'activated_time_length: ' + str(self.activated_time_length) + '; '
+        pendingTimeStr = 'pending_time_length: ' + str(self.pending_time_length) + '; '
+        preemptCountStr = 'preempt_count: ' + str(self.preempt_count) + '; '
+        resumeCountStr = 'resume_count: ' + str(self.resume_count) + '; '
+        return taskInstanceStr + startedStr + pausedStr + startTimeStr + lastCheckTimeStr + activedTimeStr + pendingTimeStr + preemptCountStr + resumeCountStr
+
     def do_work(self):
         # self.cluster.waiting_tasks.remove(self)
         # self.cluster.running_tasks.append(self)
         # self.machine.run(self)
-        yield self.env.timeout(self.duration)
-        infoPrinter(__file__, sys._getframe(), "当前时间: {0}; 完成task的一个实例: {1}; 该task的实例数量: {2}".format(self.env.now, self.task.task_index, self.task.task_config.instances_number))
+        # 增加一个抢占的设计
+        beginTime = self.env.now
+        currentWorkTime = 0
+        isOK = False
+        while not isOK:
+            try:
+                yield self.env.timeout(self.duration - currentWorkTime) # 这里的设计天生不适合抢占设计...
+                isOK = True
+            except Interrupt as interrupt:
+                cause = interrupt.cause
+                currentWorkTime = self.env.now - beginTime
+                infoPrinter(__file__, sys._getframe(), "当前时间: {0}; 已经执行: {1}; 出现抢占测试: {2}".format(self.env.now, self.activated_time_length ,cause))
         self.finished = True
         self.finished_timestamp = self.env.now
+        self.activated_time_length = self.activated_time_length + self.env.now - self.last_started_timestamp
 
         self.machine.stop_task_instance(self)
+        self.machine = None
+        infoPrinter(__file__, sys._getframe(), "当前时间: {0}; 完成一个task_instance: {1}".format(self.env.now, self.info))
 
     def schedule(self, machine):
-        self.started = True
-        self.started_timestamp = self.env.now
-
+        # 该函数会重复调用
         self.machine = machine
         self.machine.run_task_instance(self)
-        self.process = self.env.process(self.do_work())
+        if self.process is None:
+            self.process = self.env.process(self.do_work())
+
+        self.started = True
+        self.paused = False
+
+        self.last_started_timestamp = self.env.now
+        if self.resume_count == 0:
+            self.first_started_timestamp = self.env.now
+        self.resume_count = self.resume_count + 1
+        infoPrinter(__file__, sys._getframe(), "当前时间: {0}; 调度task的一个实例: {1}".format(self.env.now, self.info))
+
+    def interruptstop(self):
+        # 副作用损耗资源
+        if (not self.started) or (self.paused) or (self.machine is None):
+            raise RuntimeError("当前时间: {0}; 抢占task的一个实例: {1}; 不符合抢占状态".format(self.env.now, self.info))
+        self.machine.stop_task_instance(self)
+        self.machine = None 
+
+        self.process.interrupt()
+
+        self.started = False
+        self.paused = True 
+
+        self.activated_time_length = self.activated_time_length + self.env.now - self.last_started_timestamp
+        self.last_checkpoint_timestamp = self.env.now
+        self.preempt_count = self.preempt_count + 1
+        infoPrinter(__file__, sys._getframe(), "当前时间: {0}; 抢占task的一个实例: {1}; 抢占成功".format(self.env.now, self.info))
+        
+        

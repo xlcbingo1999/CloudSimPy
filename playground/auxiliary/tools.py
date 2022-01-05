@@ -9,7 +9,8 @@ def average_completion(exp):
     for job in exp.simulation.cluster.jobs:
         for task in job.tasks:
             number_task += 1
-            completion_time += (task.finished_timestamp - task.started_timestamp)
+            # completion_time += (task.finished_timestamp - task.started_timestamp) # 这里有问题吧，计算的应该是job的提交时间
+            completion_time += (task.finished_timestamp - task.job.job_config.submit_time)
     return completion_time / number_task
 
 
@@ -19,7 +20,8 @@ def average_slowdown(exp):
     for job in exp.simulation.cluster.jobs:
         for task in job.tasks:
             number_task += 1
-            slowdown += (task.finished_timestamp - task.started_timestamp) / task.task_config.duration
+            # slowdown += (task.finished_timestamp - task.started_timestamp) / task.task_config.duration
+            slowdown += (task.finished_timestamp - task.job.job_config.submit_time)
     return slowdown / number_task
 
 

@@ -12,13 +12,16 @@ class Scheduler(object):
         self.cluster = simulation.cluster
 
     def make_decision(self):
+        # 这个函数的作用边界是: 执行放置和取消放置，不应该和调度算法耦合！
         while True:
-            machine, task = self.algorithm(self.cluster, self.env.now)
-            if machine is None or task is None:
+            machine, task, task_instance = self.algorithm(self.cluster, self.env.now)
+            if machine is None or task is None or task_instance is None:
                 break
             else:
-                # 这里每次只会申请一个实例，所以需要while True
-                task.start_task_instance(machine)
+                # 这里需要传递非负数的index，用于启动和抢占instance
+                task.start_task_instance(machine, task_instance)
+                task.pause_task_instance(task_instance)
+                task.start_task_instance(machine, task_instance)
 
     def run(self):
         while not self.simulation.finished:
