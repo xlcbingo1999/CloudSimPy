@@ -11,7 +11,7 @@ def average_completion(exp):
         for task in job.tasks:
             number_task += 1
             # completion_time += (task.finished_timestamp - task.started_timestamp)
-            completion_time += (task.finished_timestamp - task.job.job_config.submit_time)
+            completion_time += (task.finished_timestamp - task.task_config.submit_time)
     return completion_time / number_task
 
 
@@ -22,7 +22,7 @@ def average_slowdown(exp):
         for task in job.tasks:
             number_task += 1
             # slowdown += (task.finished_timestamp - task.started_timestamp) / task.task_config.duration
-            slowdown += (task.finished_timestamp - task.job.job_config.submit_time) / task.task_config.duration
+            slowdown += (task.finished_timestamp - task.task_config.submit_time) / task.task_config.duration
     return slowdown / number_task
 
 

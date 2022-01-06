@@ -12,6 +12,8 @@ elif [ "$1" = "Tetris" ]; then
     python Tetris-makespan.py >> ./results/Tetris-makespan-${time}.log
 elif [ "$1" = "DeepJS" ]; then
     python DeepJS-makespan.py >> ./results/DeepJS-makespan-${time}.log
+elif [ "$1" = "Tiresias" ]; then
+    python TiresiasDLAS-makespan.py >> ./results/TiresiasDLAS-makespan-${time}.log
 else
     echo "匹配执行出错"
 fi

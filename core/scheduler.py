@@ -1,3 +1,6 @@
+import sys
+from playground.Non_DAG.utils.tools import debugPrinter
+
 class Scheduler(object):
     def __init__(self, env, algorithm):
         self.env = env
@@ -14,14 +17,29 @@ class Scheduler(object):
     def make_decision(self):
         # 这个函数的作用边界是: 执行放置和取消放置，不应该和调度算法耦合！
         while True:
-            machine, task, task_instance = self.algorithm(self.cluster, self.env.now)
-            if machine is None or task is None or task_instance is None:
+            # 返回值: operatorIndex, candidate_machine, candidate_task, candidate_task_instance
+            # operatorIndex: 0 - 调度instance到新机器上去; 1 - 将instance从机器上抢占出来; 2 - 静默状态; 3 - 结束状态
+            operatorIndex, machine, task, task_instance = self.algorithm(self.cluster, self.env.now)
+            if operatorIndex == 0:
+                debugPrinter(__file__, sys._getframe(), "当前时间: {0}: 算法返回operatorIndex:0 调度执行".format(self.env.now))
+                task.start_task_instance(machine, task_instance)
+            elif operatorIndex == 1:
+                debugPrinter(__file__, sys._getframe(), "当前时间: {0}: 算法返回operatorIndex:1 卸载任务".format(self.env.now))
+                task.pause_task_instance(task_instance)
+            elif operatorIndex == 2:
+                debugPrinter(__file__, sys._getframe(), "当前时间: {0}: 算法返回operatorIndex:2 静默状态 执行算法内调度等操作".format(self.env.now))
+            elif operatorIndex == 3:
+                debugPrinter(__file__, sys._getframe(), "当前时间: {0}: 算法返回operatorIndex:3 结束该时刻的调度状态".format(self.env.now))
                 break
             else:
-                # 这里需要传递非负数的index，用于启动和抢占instance
-                task.start_task_instance(machine, task_instance)
-                task.pause_task_instance(task_instance)
-                task.start_task_instance(machine, task_instance)
+                raise RuntimeError("xiaolinchang: 返回值错误: {0} 目标operatorIndex: 0 - 调度instance到新机器上去; 1 - 将instance从机器上抢占出来; 2 - 什么都不干".format(operatorIndex))
+            # if machine is None or task is None or task_instance is None:
+            #     break
+            # else:
+            #     # 这里需要传递非负数的index，用于启动和抢占instance
+            #     task.start_task_instance(machine, task_instance)
+            #     task.pause_task_instance(task_instance)
+            #     task.start_task_instance(machine, task_instance)
 
     def run(self):
         while not self.simulation.finished:

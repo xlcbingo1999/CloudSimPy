@@ -4,20 +4,22 @@ class TaskInstanceConfig(object):
         self.memory = task_config.memory
         self.disk = task_config.disk
         self.duration = task_config.duration
+        self.submit_time = task_config.submit_time
 
 
 class TaskConfig(object):
-    def __init__(self, task_index, instances_number, cpu, memory, disk, duration, parent_indices=None):
+    def __init__(self, task_index, instances_number, cpu, memory, disk, duration, submit_time, parent_indices=None):
         self.task_index = task_index
         self.instances_number = instances_number
         self.cpu = cpu
         self.memory = memory
         self.disk = disk
         self.duration = duration
+        self.submit_time = submit_time
         self.parent_indices = parent_indices
 
     def printState(self):
-        return "[检查task]: task_index: " + str(self.task_index) + " duration: " + str(self.duration) +  " cpu: " +  str(self.cpu) + " memory: " + str(self.memory)
+        return "[检查task]: task_index: " + str(self.task_index) + " duration: " + str(self.duration) +  " cpu: " +  str(self.cpu) + " memory: " + str(self.memory) + " submit_time: " + str(self.submit_time)
 
 
 class JobConfig(object):

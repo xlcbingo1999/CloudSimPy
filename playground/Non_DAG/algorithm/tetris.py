@@ -23,14 +23,14 @@ class Tetris(Algorithm):
         for machine in machines:
             for task in tasks:
                 if machine.accommodate(task):
-                    valid_pairs.append((machine, task))
+                    valid_pairs.append((machine, task, task.waiting_task_instances[0]))
         if len(valid_pairs) == 0:
-            debugPrinter(__file__, sys._getframe(), "当前时间: {0}; 等待队列: {1}; 候选机器和task: [{2}, {3}] ".format(clock, [(task.task_index, task.task_config.instances_number - task.next_instance_pointer) for task in tasks], None, None))
-            return None, None
+            return 3, None, None, None
         pair_index = Tetris.calculate_alignment(valid_pairs)
         pair = valid_pairs[pair_index]
-        if pair[0] != None and pair[1] != None:
-            debugPrinter(__file__, sys._getframe(), "当前时间: {0}; 等待队列: {1}; 候选机器和task: [{2}, {3}] ".format(clock, [(task.task_index, task.task_config.instances_number - task.next_instance_pointer) for task in tasks], pair[0].id, pair[1].task_index))
+        operator_index = 3
+        if pair[0] != None and pair[1] != None and pair[2] != None:
+            operator_index = 0
         else:
-            debugPrinter(__file__, sys._getframe(), "当前时间: {0}; 等待队列: {1}; 候选机器和task: [{2}, {3}] ".format(clock, [(task.task_index, task.task_config.instances_number - task.next_instance_pointer) for task in tasks], pair[0], pair[1]))
-        return pair[0], pair[1]
+            operator_index = 3
+        return operator_index, pair[0], pair[1], pair[2]

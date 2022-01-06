@@ -29,7 +29,7 @@ class CSVReader(object):
             instances_num = series.instances_num
 
             task_configs = job_task_map.setdefault(job_id, [])
-            task_configs.append(TaskConfig(task_id, instances_num, cpu, memory, disk, duration, parent_indices))
+            task_configs.append(TaskConfig(task_id, instances_num, cpu, memory, disk, duration, submit_time, parent_indices))
             job_submit_time_map[job_id] = submit_time
 
         job_configs = []
