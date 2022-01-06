@@ -3,14 +3,16 @@ import sys
 from playground.Non_DAG.utils.tools import debugPrinter
 
 class TiresiasDLASAlgorithm(Algorithm):
-    def __init__(self):
+    def __init__(self, solve_starvation=None):
         super().__init__()
         self.queues_num = 4
         self.queues = [list() for i in range(self.queues_num)]
-        self.queue_limit = [40, 80, 120, 160] # 多级反馈队列的限制
+        self.queue_limit = [40, 80, 120] # 多级反馈队列的限制
         
         self.last_clock = None
         self.update_pri_operator_finished = False
+
+        self.solve_starvation = solve_starvation
 
     def __call__(self, cluster, clock):
         # 每个clock会执行一次算法
@@ -37,9 +39,8 @@ class TiresiasDLASAlgorithm(Algorithm):
         # 2 修改原有工作的优先级，此步骤和机器无关，用一个标记可以避免多次重复执行
         if self.update_pri_operator_finished is False:
             for index in range(self.queues_num):
-                if index == self.queues_num - 1:
-                    # 将饥饿的instance恢复到queue[0], 这里使用的是简化方法
-                    first_hungry_instance = next((instance for instance in self.queues[index] if instance.started is False and instance.paused is True and instance.last_pending_time_length >= self.queue_limit[index]), None)
+                if self.solve_starvation is not None and index == self.queues_num - 1: # 必须设置超参数才会有饥饿处理
+                    first_hungry_instance = next((instance for instance in self.queues[index] if instance.started is False and instance.paused is True and instance.last_pending_time_length >= self.history_activated_time_length * self.solve_starvation), None)
                     if first_hungry_instance is not None:
                         first_hungry_instance.queue_index = 0
                         self.queues[index].remove(first_hungry_instance)

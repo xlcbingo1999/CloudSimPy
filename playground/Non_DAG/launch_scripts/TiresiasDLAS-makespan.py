@@ -21,7 +21,7 @@ csv_reader = CSVReader(jobs_csv)
 jobs_configs = csv_reader.generate(0, jobs_len)
 
 tic = time.time()
-algorithm = TiresiasDLASAlgorithm()
+algorithm = TiresiasDLASAlgorithm(0.0005)
 episode = Episode(machine_configs, jobs_configs, algorithm, None)
 episode.run()
 print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode))
