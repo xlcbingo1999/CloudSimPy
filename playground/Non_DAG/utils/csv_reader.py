@@ -5,7 +5,7 @@ import numpy as np
 from core.job import JobConfig, TaskConfig
 import sys
 from playground.Non_DAG.utils.tools import debugPrinter
-
+from core.machine import MachineActionConfig, MachineConfig
 
 class CSVReader(object):
     def __init__(self, filename):
@@ -89,4 +89,37 @@ class CSVReader(object):
         print('Task instances duration mean: ', np.mean(task_instances_durations))
         print('Task instances duration std: ', np.std(task_instances_durations))
 
+        return ret
+
+class MachineConfigReader(object):
+    def __init__(self, filename):
+        super().__init__()
+        self.machine_action_configs = []
+
+        self.filename = filename
+        df = pd.read_csv(self.filename)        
+        
+        for i in range(len(df)):
+            series = df.iloc[i]
+            submite_time = series.submit_time
+            operation = series.operation
+            machine_id = series.machine_id
+            cpu_capacity = series.cpu_capacity
+            memory_capacity = series.memory_capacity
+            disk_capacity = series.disk_capacity
+            gpu_capacity = series.gpu_capacity
+            gpu_memory_capacity = series.gpu_memory_capacity
+            
+            machine_action_config = MachineActionConfig(submite_time, operation, machine_id, 
+                                                        cpu_capacity, memory_capacity, disk_capacity, gpu_capacity, gpu_memory_capacity)
+            self.machine_action_configs.append(machine_action_config)
+        self.machine_action_configs.sort(key=lambda action: action.submite_time)
+
+    @property
+    def action_size(self):
+        return len(self.machine_action_configs)
+
+    def generate(self, offset, number):
+        number = number if offset + number < len(self.machine_action_configs) else len(self.machine_action_configs) - offset
+        ret = self.machine_action_configs[offset: offset + number]
         return ret

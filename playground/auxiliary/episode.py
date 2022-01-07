@@ -1,12 +1,12 @@
 import simpy
 from core.cluster import Cluster
 from core.scheduler import Scheduler
-from core.broker import Broker
+from core.broker import JobBroker
 from core.simulation import Simulation
 
 
 class Episode(object):
-    broker_cls = Broker
+    broker_cls = JobBroker
 
     def __init__(self, machine_configs, task_configs, algorithm, event_file):
         self.env = simpy.Environment()

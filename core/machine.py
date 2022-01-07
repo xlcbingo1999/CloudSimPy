@@ -1,11 +1,38 @@
 from enum import Enum
+import operator
 import sys
 from playground.Non_DAG.utils.tools import debugPrinter
 
-class MachineConfig(object):
-    idx = 0
+class MachineActionConfig(object):
+    def __init__(self, submite_time, operation, machine_id, 
+                 cpu_capacity, memory_capacity, disk_capacity, gpu_capacity, gpu_memory_capacity):
+        self.submite_time = submite_time
+        self.operation = operation
+        self.machine_id = machine_id
+        self.cpu_capacity = cpu_capacity
+        self.memory_capacity = memory_capacity
+        self.disk_capacity = disk_capacity
+        self.gpu_capacity = gpu_capacity
+        self.gpu_memory_capacity = gpu_memory_capacity
 
-    def __init__(self, cpu_capacity, memory_capacity, disk_capacity, gpu_capacity, gpu_memory_capacity, cpu=None, memory=None, disk=None, gpu=None, gpu_memory=None):
+    @property
+    def state(self):
+        prefix = '[检查MachineActionConfig]: '
+        operationStr = 'operation: ' + str(self.operation) + '; '
+        machineIdStr = 'machine_id: ' + str(self.machine_id) + '; '
+        cpuStr =  'cpu: ' + str(self.cpu_capacity) + '; '
+        memoryStr =  'memory: ' + str(self.memory_capacity) + '; '
+        diskStr =  'disk: ' + str(self.disk_capacity) + '; '
+        gpuStr =  'gpu: ' + str(self.gpu_capacity) + '; '
+        gpuMemoryStr =  'gpu_memory: ' + str(self.gpu_memory_capacity) + '; '
+        return prefix + operationStr + machineIdStr + cpuStr + memoryStr + diskStr + gpuStr + gpuMemoryStr
+
+
+
+class MachineConfig(object):
+    # idx = 0
+
+    def __init__(self, hash_idx, cpu_capacity, memory_capacity, disk_capacity, gpu_capacity, gpu_memory_capacity, cpu=None, memory=None, disk=None, gpu=None, gpu_memory=None):
         self.cpu_capacity = cpu_capacity
         self.memory_capacity = memory_capacity
         self.disk_capacity = disk_capacity
@@ -18,9 +45,23 @@ class MachineConfig(object):
         self.gpu = gpu_capacity if gpu is None else gpu
         self.gpu_memory = gpu_memory_capacity if gpu_memory is None else gpu_memory
 
-        self.id = MachineConfig.idx
-        MachineConfig.idx += 1
+        self.id = hash_idx
+        # self.id = MachineConfig.idx
+        # MachineConfig.idx += 1 # 每次新建一个对象都会增加一个id，这种方式还是尽量改掉吧
 
+    def __init__(self, machine_action_config, cpu=None, memory=None, disk=None, gpu=None, gpu_memory=None):
+        self.id = machine_action_config.machine_id
+        self.cpu_capacity = machine_action_config.cpu_capacity
+        self.memory_capacity = machine_action_config.memory_capacity
+        self.disk_capacity = machine_action_config.disk_capacity
+        self.gpu_capacity = machine_action_config.gpu_capacity
+        self.gpu_memory_capacity = machine_action_config.gpu_memory_capacity
+
+        self.cpu = machine_action_config.cpu_capacity if cpu is None else cpu
+        self.memory = machine_action_config.memory_capacity if memory is None else memory
+        self.disk = machine_action_config.disk_capacity if disk is None else disk
+        self.gpu = machine_action_config.gpu_capacity if gpu is None else gpu
+        self.gpu_memory = machine_action_config.gpu_memory_capacity if gpu_memory is None else gpu_memory
 
 class MachineDoor(Enum):
     TASK_IN = 0
@@ -64,6 +105,20 @@ class Machine(object):
         self.task_instances.remove(task_instance) 
         self.machine_door = MachineDoor.TASK_OUT
 
+    def add_resource(self, cpu_capacity, memory_capacity, disk_capacity, gpu_capacity, gpu_memory_capacity):
+        self.cpu_capacity += cpu_capacity
+        self.memory_capacity += memory_capacity
+        self.disk_capacity += disk_capacity
+        self.gpu_capacity += gpu_capacity
+        self.gpu_memory_capacity += gpu_memory_capacity
+
+    def remove_resource(self, cpu_capacity, memory_capacity, disk_capacity, gpu_capacity, gpu_memory_capacity):
+        self.cpu_capacity -= cpu_capacity
+        self.memory_capacity -= memory_capacity
+        self.disk_capacity -= disk_capacity
+        self.gpu_capacity -= gpu_capacity
+        self.gpu_memory_capacity -= gpu_memory_capacity
+
     @property
     def running_task_instances(self):
         ls = []
@@ -82,6 +137,9 @@ class Machine(object):
 
     def attach(self, cluster):
         self.cluster = cluster
+    
+    def dis_attach(self):
+        self.cluster = None
 
     def accommodate(self, task):
         return self.cpu >= task.task_config.cpu and \

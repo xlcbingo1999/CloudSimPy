@@ -6,7 +6,7 @@ sys.path.insert(0, '/home/linchangxiao/labInDiWu/CloudSimPy')
 from core.machine import MachineConfig
 from playground.Non_DAG.algorithm.first_fit import FirstFitAlgorithm
 
-from playground.Non_DAG.utils.csv_reader import CSVReader
+from playground.Non_DAG.utils.csv_reader import CSVReader, MachineConfigReader
 from playground.Non_DAG.utils.feature_functions import features_extract_func, features_normalize_func
 from playground.Non_DAG.utils.tools import average_completion, average_slowdown
 from playground.Non_DAG.utils.episode import Episode
@@ -14,14 +14,17 @@ from playground.Non_DAG.utils.episode import Episode
 machines_number = 16
 jobs_len = 10
 jobs_csv = '/home/linchangxiao/labInDiWu/CloudSimPy/playground/Non_DAG/jobs_files/jobs.csv'
+machine_config_csv = '/home/linchangxiao/labInDiWu/CloudSimPy/playground/Non_DAG/jobs_files/machines.csv'
 
+# machine_configs = [MachineConfig(10, 1, 1, 100, 20480) for i in range(machines_number)]
+machine_action_config_csv_reader = MachineConfigReader(machine_config_csv)
+machine_action_configs = machine_action_config_csv_reader.generate(0, machine_action_config_csv_reader.action_size)
 
-machine_configs = [MachineConfig(10, 1, 1, 100, 20480) for i in range(machines_number)]
 csv_reader = CSVReader(jobs_csv)
 jobs_configs = csv_reader.generate(0, jobs_len)
 
 tic = time.time()
 algorithm = FirstFitAlgorithm()
-episode = Episode(machine_configs, jobs_configs, algorithm, None)
+episode = Episode(machine_action_configs, jobs_configs, algorithm, None)
 episode.run()
 print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode))

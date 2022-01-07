@@ -275,6 +275,7 @@ class TaskInstance(object):
     @property
     def info(self):
         taskInstanceStr = 'jobID-taskID-instanceID: ' + self.id + '; '
+        machineStr = 'machineID: ' + str(self.machine.id if self.machine is not None else 'None') + '; '
         startedStr = 'isStart: ' + str(self.started) + '; '
         pausedStr = 'isPaused: ' + str(self.paused) + '; '
         startTimeStr = 'last_started_timestamp: ' + str(self.last_started_timestamp if self.last_started_timestamp is not None else 'None') + '; '
@@ -285,7 +286,7 @@ class TaskInstance(object):
         preemptCountStr = 'preempt_count: ' + str(self.preempt_count) + '; '
         resumeCountStr = 'resume_count: ' + str(self.resume_count) + '; '
         queueIndexStr = 'queue_index' + str(self.queue_index if self.queue_index is not None else 'None') + '; '
-        return taskInstanceStr + startedStr + pausedStr + startTimeStr + lastCheckTimeStr + submitTimeStr + activedTimeStr + pendingTimeStr + preemptCountStr + resumeCountStr + queueIndexStr
+        return taskInstanceStr + machineStr + startedStr + pausedStr + startTimeStr + lastCheckTimeStr + submitTimeStr + activedTimeStr + pendingTimeStr + preemptCountStr + resumeCountStr + queueIndexStr
 
     def do_work(self):
         # self.cluster.waiting_tasks.remove(self)

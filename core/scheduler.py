@@ -21,15 +21,15 @@ class Scheduler(object):
             # operatorIndex: 0 - 调度instance到新机器上去; 1 - 将instance从机器上抢占出来; 2 - 静默状态; 3 - 结束状态
             operatorIndex, machine, task, task_instance = self.algorithm(self.cluster, self.env.now)
             if operatorIndex == 0:
-                debugPrinter(__file__, sys._getframe(), "当前时间: {0}: 算法返回operatorIndex:0 调度执行".format(self.env.now))
+                debugPrinter(__file__, sys._getframe(), "当前时间: {0}: 算法准备返回operatorIndex:0 调度执行 taskInstanceId-machineId: {1}-{2}".format(self.env.now, task_instance.id, machine.id))
                 task.start_task_instance(machine, task_instance)
             elif operatorIndex == 1:
-                debugPrinter(__file__, sys._getframe(), "当前时间: {0}: 算法返回operatorIndex:1 卸载任务".format(self.env.now))
+                debugPrinter(__file__, sys._getframe(), "当前时间: {0}: 算法准备返回operatorIndex:1 卸载任务 taskInstanceId: {1}".format(self.env.now, task_instance.id))
                 task.pause_task_instance(task_instance)
             elif operatorIndex == 2:
-                debugPrinter(__file__, sys._getframe(), "当前时间: {0}: 算法返回operatorIndex:2 静默状态 执行算法内调度等操作".format(self.env.now))
+                debugPrinter(__file__, sys._getframe(), "当前时间: {0}: 算法准备返回operatorIndex:2 静默状态 执行算法内调度等操作".format(self.env.now))
             elif operatorIndex == 3:
-                debugPrinter(__file__, sys._getframe(), "当前时间: {0}: 算法返回operatorIndex:3 结束该时刻的调度状态".format(self.env.now))
+                debugPrinter(__file__, sys._getframe(), "当前时间: {0}: 算法准备返回operatorIndex:3 结束该时刻的调度状态".format(self.env.now))
                 break
             else:
                 raise RuntimeError("xiaolinchang: 返回值错误: {0} 目标operatorIndex: 0 - 调度instance到新机器上去; 1 - 将instance从机器上抢占出来; 2 - 什么都不干".format(operatorIndex))

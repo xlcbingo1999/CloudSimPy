@@ -1,4 +1,4 @@
-from core.broker import Broker
+from core.broker import JobBroker
 from .job import Job
 
-Broker.job_cls = Job
+JobBroker.job_cls = Job

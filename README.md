@@ -10,7 +10,12 @@
     - [x] 增加GPU-memory
     - [ ] 接入一个开源数据集
     - [ ] 对Instance进行ps-worker改造
-    - [ ] 同一个task中instance的执行时间不同
+    - [ ] 同一个task中Instance的执行时间不同
+- [ ] 改造集群环境
+    - [x] **静态方法**: 支持集群在特定时刻进行扩展GPU/机器数量
+    - [ ] **动态方法**: 支持集群在特定时刻进行扩展GPU/机器数量
+    - [ ] 支持一个Instance可以在多台机器上执行 ⚠存疑: 这里是否需要这种设计
+    - [ ] 接入网络延迟
 - [ ] 集成[Gandiva](https://we5lw6jk7r.feishu.cn/wiki/wikcnLjzQuk89nrhUDQZy56qjzh)
 - [x] 集成[Tiresias](https://we5lw6jk7r.feishu.cn/wiki/wikcnzr0Uw239jWOtVFdX1In00b)
     - [x] 支持执行过程中暂停instance的进行

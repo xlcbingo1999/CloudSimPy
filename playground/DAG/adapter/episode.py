@@ -1,4 +1,4 @@
 from playground.auxiliary.episode import Episode
-from .broker import Broker
+from .broker import JobBroker
 
-Episode.broker_cls = Broker
+Episode.broker_cls = JobBroker
