@@ -213,6 +213,8 @@ class TaskInstance(object):
         self.cpu = task_instance_config.cpu
         self.memory = task_instance_config.memory
         self.disk = task_instance_config.disk
+        self.gpu = task_instance_config.gpu
+        self.gpu_memory = task_instance_config.gpu_memory
         self.duration = task_instance_config.duration
 
         self.machine = None

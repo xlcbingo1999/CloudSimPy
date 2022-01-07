@@ -21,6 +21,7 @@ class RLAlgorithm(object):
         self.current_trajectory = []
 
     def extract_features(self, valid_pairs):
+        # TODO(xiaolinchang-gpu): 未修改
         features = []
         for machine, task in valid_pairs:
             features.append([machine.cpu, machine.memory] + self.features_extract_func(task))

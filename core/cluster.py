@@ -86,6 +86,14 @@ class Cluster(object):
         return sum([machine.disk for machine in self.machines])
 
     @property
+    def gpu(self):
+        return sum([machine.gpu for machine in self.machines])
+
+    @property
+    def gpu_memory(self):
+        return sum([machine.gpu_memory for machine in self.machines])
+
+    @property
     def cpu_capacity(self):
         return sum([machine.cpu_capacity for machine in self.machines])
 
@@ -96,6 +104,14 @@ class Cluster(object):
     @property
     def disk_capacity(self):
         return sum([machine.disk_capacity for machine in self.machines])
+
+    @property
+    def gpu_capacity(self):
+        return sum([machine.gpu_capacity for machine in self.machines])
+
+    @property
+    def gpu_memory_capacity(self):
+        return sum([machine.gpu_memory_capacity for machine in self.machines])
 
     @property
     def state(self):
@@ -110,4 +126,6 @@ class Cluster(object):
             'cpu': self.cpu / self.cpu_capacity,
             'memory': self.memory / self.memory_capacity,
             'disk': self.disk / self.disk_capacity,
+            'gpu': self.gpu / self.gpu_capacity,
+            'gpu_memory': self.gpu_memory / self.gpu_memory_capacity,
         }

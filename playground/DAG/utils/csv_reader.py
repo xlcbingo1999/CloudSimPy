@@ -17,6 +17,7 @@ class CSVReader(object):
         job_task_map = {}
         job_submit_time_map = {}
         for i in range(len(df)):
+            # TODO(xiaolinchang-gpu): 未修改
             series = df.iloc[i]
             job_id = series.job_id
             task_id, parent_indices = father_task_indices(series.task_id, series.task_type)
@@ -53,6 +54,7 @@ class CSVReader(object):
         for job_config in ret:
             job_config.submit_time -= submit_time_base
             tasks_number += len(job_config.task_configs)
+            # TODO(xiaolinchang-gpu): 未修改
             for task_config in job_config.task_configs:
                 task_instances_numbers.append(task_config.instances_number)
                 task_instances_durations.extend([task_config.duration] * int(task_config.instances_number))

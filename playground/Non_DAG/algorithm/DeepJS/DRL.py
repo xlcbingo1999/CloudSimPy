@@ -27,6 +27,7 @@ class RLAlgorithm(object):
         features = []
         for machine, task in valid_pairs:
             # 6维向量[machine.cpu, machine.memory, task.cpu, task.memory, task.duration, task.waiting_task_instances_number]
+            # TODO(xiaolinchang-gpu): 未修改
             features.append([machine.cpu, machine.memory] + self.features_extract_func(task))
         features = self.features_normalize_func(features) # 这里归一化参数如何设置的？
         return features

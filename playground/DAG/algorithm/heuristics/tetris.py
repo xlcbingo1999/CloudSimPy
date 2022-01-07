@@ -5,6 +5,7 @@ from core.alogrithm import Algorithm
 class Tetris(Algorithm):
     @staticmethod
     def calculate_alignment(valid_pairs):
+        # TODO(xiaolinchang-gpu): 未修改
         machine_features = []
         task_features = []
         for index, pair in enumerate(valid_pairs):

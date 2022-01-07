@@ -5,13 +5,22 @@
 - [x] 增加更多log
     - [x] log层级: info / debug
     - [ ] log参数注入
+- [ ] 改造成深度学习环境
+    - [x] 增加GPU
+    - [x] 增加GPU-memory
+    - [ ] 接入一个开源数据集
+    - [ ] 对Instance进行ps-worker改造
+    - [ ] 同一个task中instance的执行时间不同
 - [ ] 集成[Gandiva](https://we5lw6jk7r.feishu.cn/wiki/wikcnLjzQuk89nrhUDQZy56qjzh)
-- [ ] 集成[Tiresias](https://we5lw6jk7r.feishu.cn/wiki/wikcnzr0Uw239jWOtVFdX1In00b)
+- [x] 集成[Tiresias](https://we5lw6jk7r.feishu.cn/wiki/wikcnzr0Uw239jWOtVFdX1In00b)
+    - [x] 支持执行过程中暂停instance的进行
+    - [x] 支持instance粒度的调度算法
 - [ ] 优化强化学习
+    - [ ] 接入一个新的强化学习算法
     - [x] 支持Tensorflow-gpu
     - [ ] 支持Tensorflow 2.0
     - [ ] 支持Pytorch
-- [ ] 集成...
+
 
 ## 目前亟待解决的问题
 

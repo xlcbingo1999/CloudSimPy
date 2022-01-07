@@ -33,13 +33,7 @@ class Scheduler(object):
                 break
             else:
                 raise RuntimeError("xiaolinchang: 返回值错误: {0} 目标operatorIndex: 0 - 调度instance到新机器上去; 1 - 将instance从机器上抢占出来; 2 - 什么都不干".format(operatorIndex))
-            # if machine is None or task is None or task_instance is None:
-            #     break
-            # else:
-            #     # 这里需要传递非负数的index，用于启动和抢占instance
-            #     task.start_task_instance(machine, task_instance)
-            #     task.pause_task_instance(task_instance)
-            #     task.start_task_instance(machine, task_instance)
+
 
     def run(self):
         while not self.simulation.finished:

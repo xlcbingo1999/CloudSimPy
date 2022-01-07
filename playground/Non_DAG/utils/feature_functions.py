@@ -2,6 +2,7 @@ import numpy as np
 
 
 def features_extract_func(task):
+    # TODO(xiaolinchang-gpu): 未修改
     return [task.task_config.cpu, task.task_config.memory,
             task.task_config.duration, task.waiting_task_instances_number]
 

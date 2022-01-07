@@ -16,7 +16,7 @@ jobs_len = 10
 jobs_csv = '/home/linchangxiao/labInDiWu/CloudSimPy/playground/Non_DAG/jobs_files/jobs.csv'
 
 
-machine_configs = [MachineConfig(10, 1, 1) for i in range(machines_number)]
+machine_configs = [MachineConfig(10, 1, 1, 100, 20480) for i in range(machines_number)]
 csv_reader = CSVReader(jobs_csv)
 jobs_configs = csv_reader.generate(0, jobs_len)
 

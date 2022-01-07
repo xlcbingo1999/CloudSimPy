@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 
 from core.job import JobConfig, TaskConfig
+import sys
+from playground.Non_DAG.utils.tools import debugPrinter
 
 
 class CSVReader(object):
@@ -24,12 +26,15 @@ class CSVReader(object):
             cpu = series.cpu
             memory = series.memory
             disk = series.disk
+            gpu = series.gpu
+            gpu_memory = series.gpu_memory
             duration = series.duration
             submit_time = series.submit_time
             instances_num = series.instances_num
 
             task_configs = job_task_map.setdefault(job_id, [])
-            task_configs.append(TaskConfig(task_id, instances_num, cpu, memory, disk, duration, submit_time))
+            task_config = TaskConfig(task_id, instances_num, cpu, memory, disk, gpu, gpu_memory, duration, submit_time)
+            task_configs.append(task_config)
             job_submit_time_map[job_id] = submit_time
 
         job_configs = []
@@ -50,6 +55,8 @@ class CSVReader(object):
         task_instances_durations = []
         task_instances_cpu = []
         task_instances_memory = []
+        task_instances_gpu = []
+        task_instances_gpu_memory = []
         for job_config in ret:
             job_config.submit_time -= submit_time_base
             tasks_number += len(job_config.task_configs)
@@ -58,6 +65,8 @@ class CSVReader(object):
                 task_instances_durations.extend([task_config.duration] * int(task_config.instances_number))
                 task_instances_cpu.extend([task_config.cpu] * int(task_config.instances_number))
                 task_instances_memory.extend([task_config.memory] * int(task_config.instances_number))
+                task_instances_gpu.extend([task_config.gpu] * int(task_config.instances_number))
+                task_instances_gpu_memory.extend([task_config.gpu_memory] * int(task_config.instances_number))
 
         print('Jobs number: ', len(ret))
         print('Tasks number:', tasks_number)
@@ -70,6 +79,12 @@ class CSVReader(object):
 
         print('Task instances memory mean: ', np.mean(task_instances_memory))
         print('Task instances memory std: ', np.std(task_instances_memory))
+
+        print('Task instances gpu mean: ', np.mean(task_instances_gpu))
+        print('Task instances gpu std: ', np.std(task_instances_gpu))
+
+        print('Task instances gpu_memory mean: ', np.mean(task_instances_gpu_memory))
+        print('Task instances gpu_memory std: ', np.std(task_instances_gpu_memory))
 
         print('Task instances duration mean: ', np.mean(task_instances_durations))
         print('Task instances duration std: ', np.std(task_instances_durations))
