@@ -1,8 +1,6 @@
 import numpy as np
 from core.alogrithm import Algorithm
-import sys
-from playground.Non_DAG.utils.tools import debugPrinter
-
+from core.scheduler import SchedulerOperation
 
 class Tetris(Algorithm):
     @staticmethod
@@ -25,12 +23,12 @@ class Tetris(Algorithm):
                 if machine.accommodate(task):
                     valid_pairs.append((machine, task, task.waiting_task_instances[0]))
         if len(valid_pairs) == 0:
-            return 3, None, None, None
+            return SchedulerOperation.OVER_SCHEDULER, None, None, None
         pair_index = Tetris.calculate_alignment(valid_pairs)
         pair = valid_pairs[pair_index]
-        operator_index = 3
+        operator_index = SchedulerOperation.SILENCE
         if pair[0] != None and pair[1] != None and pair[2] != None:
-            operator_index = 0
+            operator_index = SchedulerOperation.TASK_INSTANCE_SCHEDULER_IN
         else:
-            operator_index = 3
+            operator_index = SchedulerOperation.OVER_SCHEDULER
         return operator_index, pair[0], pair[1], pair[2]

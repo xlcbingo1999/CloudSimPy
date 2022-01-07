@@ -1,6 +1,5 @@
 from core.alogrithm import Algorithm
-import sys
-from playground.Non_DAG.utils.tools import debugPrinter
+from core.scheduler import SchedulerOperation
 
 class TiresiasDLASAlgorithm(Algorithm):
     def __init__(self, solve_starvation=None):
@@ -46,7 +45,7 @@ class TiresiasDLASAlgorithm(Algorithm):
                         self.queues[index].remove(first_hungry_instance)
                         self.queues[0].append(first_hungry_instance)
                         # 返回直接执行算法, machine: None
-                        return 2, first_hungry_instance.machine, first_hungry_instance.task, first_hungry_instance
+                        return SchedulerOperation.SILENCE, first_hungry_instance.machine, first_hungry_instance.task, first_hungry_instance
                     else:
                         self.update_pri_operator_finished = True
                 else:
@@ -58,7 +57,7 @@ class TiresiasDLASAlgorithm(Algorithm):
                         self.queues[index + 1].append(first_above_limit_instances)
                         
                         # 返回直接执行算法
-                        return 1, first_above_limit_instances.machine, first_above_limit_instances.task, first_above_limit_instances 
+                        return SchedulerOperation.TASK_INSTANCE_SCHEDULER_OUT, first_above_limit_instances.machine, first_above_limit_instances.task, first_above_limit_instances 
         
         # 3 新来的任务直接加入q[0]中
         for task in tasks:
@@ -75,7 +74,7 @@ class TiresiasDLASAlgorithm(Algorithm):
                         candidate_machine = machine
                         candidate_task = instance.task
                         candidate_task_instance = instance
-                        return 0, candidate_machine, candidate_task, candidate_task_instance
+                        return SchedulerOperation.TASK_INSTANCE_SCHEDULER_IN, candidate_machine, candidate_task, candidate_task_instance
         
         # 5 结束标识，后面三个全部为None
-        return 3, candidate_machine, candidate_task, candidate_task_instance
+        return SchedulerOperation.OVER_SCHEDULER, candidate_machine, candidate_task, candidate_task_instance

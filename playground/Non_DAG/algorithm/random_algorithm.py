@@ -1,7 +1,6 @@
 import numpy as np
 from core.alogrithm import Algorithm
-import sys
-from playground.Non_DAG.utils.tools import debugPrinter
+from core.scheduler import SchedulerOperation
 
 class RandomAlgorithm(Algorithm):
     def __init__(self, threshold=0.8):
@@ -26,12 +25,12 @@ class RandomAlgorithm(Algorithm):
                         schedule_candidate_task_instance = candi_instance
                         break
         if len(all_candidates) == 0:
-            return 3, None, None, None
+            return SchedulerOperation.OVER_SCHEDULER, None, None, None
         if candidate_task is None:
             pair_index = np.random.randint(0, len(all_candidates))
-            return 0, all_candidates[pair_index][0], all_candidates[pair_index][1], all_candidates[pair_index][2]
+            return SchedulerOperation.TASK_INSTANCE_SCHEDULER_IN, all_candidates[pair_index][0], all_candidates[pair_index][1], all_candidates[pair_index][2]
         else:
             if candidate_machine != None and candidate_task != None and schedule_candidate_task_instance != None:
-                return 0, candidate_machine, candidate_task, schedule_candidate_task_instance
+                return SchedulerOperation.TASK_INSTANCE_SCHEDULER_IN, candidate_machine, candidate_task, schedule_candidate_task_instance
             else:
-                return 3, candidate_machine, candidate_task, schedule_candidate_task_instance
+                return SchedulerOperation.OVER_SCHEDULER, candidate_machine, candidate_task, schedule_candidate_task_instance

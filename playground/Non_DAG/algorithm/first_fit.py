@@ -1,6 +1,5 @@
 from core.alogrithm import Algorithm
-import sys
-from playground.Non_DAG.utils.tools import debugPrinter
+from core.scheduler import SchedulerOperation
 
 class FirstFitAlgorithm(Algorithm):
     def __call__(self, cluster, clock):
@@ -17,9 +16,9 @@ class FirstFitAlgorithm(Algorithm):
                     candidate_task = task
                     schedule_candidate_task_instance = task.waiting_task_instances[0]
                     break
-        operator_index = 3
+        operator_index = SchedulerOperation.SILENCE
         if candidate_machine != None and candidate_task != None and schedule_candidate_task_instance != None:
-            operator_index = 0
+            operator_index = SchedulerOperation.TASK_INSTANCE_SCHEDULER_IN
         else:
-            operator_index = 3
+            operator_index = SchedulerOperation.OVER_SCHEDULER
         return operator_index, candidate_machine, candidate_task, schedule_candidate_task_instance
