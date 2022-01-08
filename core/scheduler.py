@@ -45,7 +45,7 @@ class Scheduler(object):
                 debugPrinter(__file__, sys._getframe(), "当前时间: {0}: 算法准备返回operatorIndex:3 结束该时刻的调度状态".format(self.env.now))
                 break
             else:
-                raise RuntimeError("xiaolinchang: 返回值错误: {0} 目标operatorIndex: 0 - 调度instance到新机器上去; 1 - 将instance从机器上抢占出来; 2 - 什么都不干".format(operatorIndex))
+                raise RuntimeError("xiaolinchang: 返回值错误: {0} 目标operatorIndex: ".format(operatorIndex))
 
 
     def run(self):

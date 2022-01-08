@@ -21,7 +21,11 @@ csv_reader = CSVReader(jobs_csv)
 jobs_configs = csv_reader.generate(0, jobs_len)
 
 tic = time.time()
+timeArray = time.localtime(tic)
+fileStr = time.strftime('%Y%m%d-%H%M%S')
+file_name = 'firstfit-event-' + str(fileStr) + '.log'
+events_csv = '/home/linchangxiao/labInDiWu/CloudSimPy/playground/Non_DAG/launch_scripts/events/' + file_name
 algorithm = FirstFitAlgorithm()
-episode = Episode(machine_action_configs, jobs_configs, algorithm, None)
+episode = Episode(machine_action_configs, jobs_configs, algorithm, events_csv)
 episode.run()
 print(episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode))

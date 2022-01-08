@@ -160,11 +160,11 @@ class Machine(object):
     def state(self):
         return {
             'id': self.id,
-            'cpu_capacity': self.cpu_capacity,
-            'memory_capacity': self.memory_capacity,
-            'disk_capacity': self.disk_capacity,
-            'gpu_capacity': self.gpu_capacity,
-            'gpu_memory_capacity': self.gpu_memory_capacity,
+            'cpu_capacity': int(self.cpu_capacity),
+            'memory_capacity': int(self.memory_capacity),
+            'disk_capacity': int(self.disk_capacity),
+            'gpu_capacity': int(self.gpu_capacity),
+            'gpu_memory_capacity': int(self.gpu_memory_capacity),
             'cpu': self.cpu / self.cpu_capacity,
             'memory': self.memory / self.memory_capacity,
             'disk': self.disk / self.disk_capacity,
