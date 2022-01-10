@@ -1,0 +1,15 @@
+,submit_time,operation,machine_id,cpu_capacity,memory_capacity,disk_capacity,gpu_capacity,gpu_memory_capacity
+0,-1,init_m,m_0,10,1,1,100,20480
+0,-1,init_m,m_1,10,1,1,99,20480
+0,-1,init_m,m_2,10,1,1,98,20480
+0,-1,init_m,m_3,10,1,1,97,20480
+0,-1,init_m,m_4,10,1,1,96,20480
+0,-1,init_m,m_5,10,1,1,95,20480
+0,-1,init_m,m_6,10,1,1,94,20480
+0,-1,init_m,m_7,10,1,1,93,20480
+0,-1,init_m,m_8,10,1,1,92,20480
+0,0,add_m,m_9,10,1,1,80,20480
+1,4,add_resource_m,m_9,0,0,0,2,0
+2,5,remove_m,m_9,0,0,0,0,0
+3,7,remove_resource_m,m_8,0,0,0,1,0
+4,10,remove_resource_m,m_8,10,1,1,91,20480

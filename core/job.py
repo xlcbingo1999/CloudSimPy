@@ -14,7 +14,7 @@ class Task(object):
 
         # 注意，下面三个list中的TaskInstance是共享的，不要轻易delete
         # TODO(xiaolinchang): 更改成deepCopy版本
-        self.task_instances = [] 
+        self.task_instances = []
         task_instance_config = TaskInstanceConfig(task_config)
         for task_instance_index in range(int(self.task_config.instances_number)):
             tempInstance = TaskInstance(self.env, self, task_instance_index, task_instance_config)
@@ -216,6 +216,7 @@ class TaskInstance(object):
         self.gpu = task_instance_config.gpu
         self.gpu_memory = task_instance_config.gpu_memory
         self.duration = task_instance_config.duration
+        self.gpu_type_require = task_instance_config.gpu_type_require
 
         self.machine = None
         self.process = None
@@ -285,8 +286,11 @@ class TaskInstance(object):
         pendingTimeStr = 'pending_time_length: ' + str(self.pending_time_length) + '; '
         preemptCountStr = 'preempt_count: ' + str(self.preempt_count) + '; '
         resumeCountStr = 'resume_count: ' + str(self.resume_count) + '; '
-        queueIndexStr = 'queue_index' + str(self.queue_index if self.queue_index is not None else 'None') + '; '
-        return taskInstanceStr + machineStr + startedStr + pausedStr + startTimeStr + lastCheckTimeStr + submitTimeStr + activedTimeStr + pendingTimeStr + preemptCountStr + resumeCountStr + queueIndexStr
+        queueIndexStr = 'queue_index: ' + str(self.queue_index if self.queue_index is not None else 'None') + '; '
+        gpuTypeRequireStr = 'gpu_type_require: ' + self.gpu_type_require + '; '
+        return (taskInstanceStr + machineStr + startedStr + pausedStr + startTimeStr 
+                + lastCheckTimeStr + submitTimeStr + activedTimeStr + pendingTimeStr 
+                + preemptCountStr + resumeCountStr + queueIndexStr + gpuTypeRequireStr)
 
     def do_work(self):
         # self.cluster.waiting_tasks.remove(self)

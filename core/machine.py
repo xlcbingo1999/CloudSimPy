@@ -5,7 +5,8 @@ from playground.Non_DAG.utils.tools import debugPrinter
 
 class MachineActionConfig(object):
     def __init__(self, submite_time, operation, machine_id, 
-                 cpu_capacity, memory_capacity, disk_capacity, gpu_capacity, gpu_memory_capacity):
+                 cpu_capacity, memory_capacity, disk_capacity, 
+                 gpu_capacity, gpu_memory_capacity, gpu_type):
         self.submite_time = submite_time
         self.operation = operation
         self.machine_id = machine_id
@@ -14,6 +15,7 @@ class MachineActionConfig(object):
         self.disk_capacity = disk_capacity
         self.gpu_capacity = gpu_capacity
         self.gpu_memory_capacity = gpu_memory_capacity
+        self.gpu_type = gpu_type
 
     @property
     def state(self):
@@ -25,19 +27,23 @@ class MachineActionConfig(object):
         diskStr =  'disk: ' + str(self.disk_capacity) + '; '
         gpuStr =  'gpu: ' + str(self.gpu_capacity) + '; '
         gpuMemoryStr =  'gpu_memory: ' + str(self.gpu_memory_capacity) + '; '
-        return prefix + operationStr + machineIdStr + cpuStr + memoryStr + diskStr + gpuStr + gpuMemoryStr
+        gpuTypeStr = 'gpu_type: ' + self.gpu_type + '; '
+        return prefix + operationStr + machineIdStr + cpuStr + memoryStr + diskStr + gpuStr + gpuMemoryStr + gpuTypeStr
 
 
 
 class MachineConfig(object):
     # idx = 0
 
-    def __init__(self, hash_idx, cpu_capacity, memory_capacity, disk_capacity, gpu_capacity, gpu_memory_capacity, cpu=None, memory=None, disk=None, gpu=None, gpu_memory=None):
+    def __init__(self, hash_idx, cpu_capacity, memory_capacity, disk_capacity, 
+                gpu_capacity, gpu_memory_capacity, gpu_type,
+                cpu=None, memory=None, disk=None, gpu=None, gpu_memory=None):
         self.cpu_capacity = cpu_capacity
         self.memory_capacity = memory_capacity
         self.disk_capacity = disk_capacity
         self.gpu_capacity = gpu_capacity
         self.gpu_memory_capacity = gpu_memory_capacity
+        self.gpu_type = gpu_type
 
         self.cpu = cpu_capacity if cpu is None else cpu
         self.memory = memory_capacity if memory is None else memory
@@ -56,6 +62,7 @@ class MachineConfig(object):
         self.disk_capacity = machine_action_config.disk_capacity
         self.gpu_capacity = machine_action_config.gpu_capacity
         self.gpu_memory_capacity = machine_action_config.gpu_memory_capacity
+        self.gpu_type = machine_action_config.gpu_type
 
         self.cpu = machine_action_config.cpu_capacity if cpu is None else cpu
         self.memory = machine_action_config.memory_capacity if memory is None else memory
@@ -77,6 +84,8 @@ class Machine(object):
         self.disk_capacity = machine_config.disk_capacity
         self.gpu_capacity = machine_config.gpu_capacity
         self.gpu_memory_capacity = machine_config.gpu_memory_capacity
+        self.gpu_type = machine_config.gpu_type
+
         self.cpu = machine_config.cpu
         self.memory = machine_config.memory
         self.disk = machine_config.disk
@@ -142,11 +151,13 @@ class Machine(object):
         self.cluster = None
 
     def accommodate(self, task):
+        # debugPrinter(__file__, sys._getframe(), "xiaolinchang: check: {0} vs. {1}".format(self.gpu_type, task.task_config.gpu_type_require))
         return self.cpu >= task.task_config.cpu and \
                self.memory >= task.task_config.memory and \
                self.disk >= task.task_config.disk and \
                self.gpu >= task.task_config.gpu and \
-               self.gpu_memory >= task.task_config.gpu_memory
+               self.gpu_memory >= task.task_config.gpu_memory and \
+               (task.task_config.gpu_type_require == 'None' or self.gpu_type == task.task_config.gpu_type_require)
 
     @property
     def feature(self):
@@ -165,14 +176,16 @@ class Machine(object):
             'disk_capacity': int(self.disk_capacity),
             'gpu_capacity': int(self.gpu_capacity),
             'gpu_memory_capacity': int(self.gpu_memory_capacity),
-            'cpu': self.cpu / self.cpu_capacity,
-            'memory': self.memory / self.memory_capacity,
-            'disk': self.disk / self.disk_capacity,
-            'gpu': self.gpu / self.gpu_capacity,
-            'gpu_memory': self.gpu_memory / self.gpu_memory_capacity,
+            'gpu_type': self.gpu_type,
+            'cpu': (self.cpu / self.cpu_capacity) if self.cpu_capacity > 0 else 'withou cpu',
+            'memory': (self.memory / self.memory_capacity) if self.memory_capacity > 0 else 'without memory',
+            'disk': (self.disk / self.disk_capacity) if self.disk_capacity > 0 else 'without disk',
+            'gpu': (self.gpu / self.gpu_capacity) if self.gpu_capacity > 0 else 'without GPU',
+            'gpu_memory': (self.gpu_memory / self.gpu_memory_capacity) if self.gpu_memory_capacity > 0 else 'without GPU',
             'running_task_instances': len(self.running_task_instances),
             'finished_task_instances': len(self.finished_task_instances)
         }
+        
 
     def __eq__(self, other):
         return isinstance(other, Machine) and other.id == self.id
