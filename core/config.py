@@ -33,7 +33,7 @@ class TaskConfig(object):
         gpuStr = "gpu: " + str(self.gpu) + '; '
         gpuMemoryStr = "gpu_memory: " + str(self.gpu_memory) + '; '
         submitTimeStr = "submit_time: " + str(self.submit_time) + '; '
-        gpuTypeRequireStr = 'gpu_type_require: ' + str(self.gpu_type_require) + '; '
+        gpuTypeRequireStr = 'gpu_type_require: ' + str(self.gpu_type_require.name) + ' with id: ' + str(self.gpu_type_require.value) + '; '
         return checkPrefix + taskIndexStr + durationStr + cpuStr + cpuMemoryStr + gpuStr + gpuMemoryStr + submitTimeStr + gpuTypeRequireStr
 
 

@@ -3,6 +3,15 @@ import operator
 import sys
 from playground.Non_DAG.utils.tools import debugPrinter
 
+class GPUType(Enum):
+    CPU = 0
+    T4 = 1
+    MISC = 2
+    P100 = 3
+    V100 = 4
+    V100M32 = 5
+
+
 class MachineActionConfig(object):
     def __init__(self, submite_time, operation, machine_id, 
                  cpu_capacity, memory_capacity, disk_capacity, 
@@ -27,7 +36,7 @@ class MachineActionConfig(object):
         diskStr =  'disk: ' + str(self.disk_capacity) + '; '
         gpuStr =  'gpu: ' + str(self.gpu_capacity) + '; '
         gpuMemoryStr =  'gpu_memory: ' + str(self.gpu_memory_capacity) + '; '
-        gpuTypeStr = 'gpu_type: ' + self.gpu_type + '; '
+        gpuTypeStr = 'gpu_type: ' + str(self.gpu_type.name) + 'with id: ' + str(self.gpu_type.value) + '; '
         return prefix + operationStr + machineIdStr + cpuStr + memoryStr + diskStr + gpuStr + gpuMemoryStr + gpuTypeStr
 
 
@@ -157,15 +166,28 @@ class Machine(object):
                self.disk >= task.task_config.disk and \
                self.gpu >= task.task_config.gpu and \
                self.gpu_memory >= task.task_config.gpu_memory and \
-               (task.task_config.gpu_type_require == 'None' or self.gpu_type == task.task_config.gpu_type_require)
+               (task.task_config.gpu_type_require == GPUType.CPU or self.gpu_type == task.task_config.gpu_type_require)
 
     @property
     def feature(self):
         return [self.cpu, self.memory, self.disk, self.gpu, self.gpu_memory]
 
     @property
+    def normal_feature(self):
+        return [
+            (self.cpu / self.cpu_capacity) if self.cpu_capacity > 0 else 1.0,
+            (self.memory / self.memory_capacity) if self.memory_capacity > 0 else 1.0,
+            (self.disk / self.disk_capacity) if self.disk_capacity > 0 else 1.0,
+            (self.gpu / self.gpu_capacity) if self.gpu_capacity > 0 else 1.0,
+            (self.gpu_memory / self.gpu_memory_capacity) if self.gpu_memory_capacity > 0 else 1.0
+        ]
+
+    @property
     def capacity(self):
+        # TODO(gpu): 是否需要改成6维度? 
         return [self.cpu_capacity, self.memory_capacity, self.disk_capacity, self.gpu_capacity, self.gpu_memory_capacity]
+
+
 
     @property
     def state(self):
@@ -176,7 +198,7 @@ class Machine(object):
             'disk_capacity': int(self.disk_capacity),
             'gpu_capacity': int(self.gpu_capacity),
             'gpu_memory_capacity': int(self.gpu_memory_capacity),
-            'gpu_type': self.gpu_type,
+            'gpu_type': str(self.gpu_type.name),
             'cpu': (self.cpu / self.cpu_capacity) if self.cpu_capacity > 0 else 'withou cpu',
             'memory': (self.memory / self.memory_capacity) if self.memory_capacity > 0 else 'without memory',
             'disk': (self.disk / self.disk_capacity) if self.disk_capacity > 0 else 'without disk',

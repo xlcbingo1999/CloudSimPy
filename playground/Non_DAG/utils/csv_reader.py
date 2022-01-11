@@ -5,7 +5,7 @@ import numpy as np
 from core.job import JobConfig, TaskConfig
 import sys
 from playground.Non_DAG.utils.tools import debugPrinter
-from core.machine import MachineActionConfig, MachineConfig
+from core.machine import MachineActionConfig, MachineConfig, GPUType
 
 class CSVReader(object):
     def __init__(self, filename):
@@ -31,7 +31,7 @@ class CSVReader(object):
             duration = series.duration
             submit_time = series.submit_time
             instances_num = series.instances_num
-            gpu_type_require = series.gpu_type_require
+            gpu_type_require = GPUType[series.gpu_type_require]
 
             task_configs = job_task_map.setdefault(job_id, [])
             task_config = TaskConfig(task_id, instances_num, cpu, memory, disk, gpu, gpu_memory, duration, submit_time, gpu_type_require)
@@ -110,7 +110,7 @@ class MachineConfigReader(object):
             disk_capacity = series.disk_capacity
             gpu_capacity = series.gpu_capacity
             gpu_memory_capacity = series.gpu_memory_capacity
-            gpu_type = series.gpu_type
+            gpu_type = GPUType[series.gpu_type]
             
             machine_action_config = MachineActionConfig(submite_time, operation, machine_id, 
                                                         cpu_capacity, memory_capacity, disk_capacity, 

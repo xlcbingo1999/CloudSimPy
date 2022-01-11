@@ -287,7 +287,7 @@ class TaskInstance(object):
         preemptCountStr = 'preempt_count: ' + str(self.preempt_count) + '; '
         resumeCountStr = 'resume_count: ' + str(self.resume_count) + '; '
         queueIndexStr = 'queue_index: ' + str(self.queue_index if self.queue_index is not None else 'None') + '; '
-        gpuTypeRequireStr = 'gpu_type_require: ' + self.gpu_type_require + '; '
+        gpuTypeRequireStr = 'gpu_type_require: ' + str(self.gpu_type_require.name) + ' with id: ' + str(self.gpu_type_require.value) + '; '
         return (taskInstanceStr + machineStr + startedStr + pausedStr + startTimeStr 
                 + lastCheckTimeStr + submitTimeStr + activedTimeStr + pendingTimeStr 
                 + preemptCountStr + resumeCountStr + queueIndexStr + gpuTypeRequireStr)

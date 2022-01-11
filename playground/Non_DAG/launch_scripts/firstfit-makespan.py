@@ -3,11 +3,9 @@ import time
 import sys
 sys.path.insert(0, '/home/linchangxiao/labInDiWu/CloudSimPy')
 
-from core.machine import MachineConfig
 from playground.Non_DAG.algorithm.first_fit import FirstFitAlgorithm
 
 from playground.Non_DAG.utils.csv_reader import CSVReader, MachineConfigReader
-from playground.Non_DAG.utils.feature_functions import features_extract_func, features_normalize_func
 from playground.Non_DAG.utils.tools import average_completion, average_slowdown
 from playground.Non_DAG.utils.episode import Episode
 

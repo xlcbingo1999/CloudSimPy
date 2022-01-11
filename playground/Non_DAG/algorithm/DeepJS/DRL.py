@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 import sys
 from playground.Non_DAG.utils.tools import debugPrinter
+from core.scheduler import SchedulerOperation
 
 
 tf.enable_eager_execution()
@@ -16,20 +17,24 @@ class Node(object):
 
 
 class RLAlgorithm(object):
-    def __init__(self, agent, reward_giver, features_normalize_func, features_extract_func):
+    def __init__(self, agent, reward_giver, feature_size, features_extract_normalize_func):
         self.agent = agent
         self.reward_giver = reward_giver
-        self.features_normalize_func = features_normalize_func
-        self.features_extract_func = features_extract_func
-        self.current_trajectory = []
+        self.features_extract_normalize_func = features_extract_normalize_func
+        self.feature_size = feature_size
+        self.current_trajectory = [] # (state, action, reward, time)
 
     def extract_features(self, valid_pairs):
         features = []
-        for machine, task in valid_pairs:
-            # 6维向量[machine.cpu, machine.memory, task.cpu, task.memory, task.duration, task.waiting_task_instances_number]
-            # TODO(xiaolinchang-gpu): 未修改
-            features.append([machine.cpu, machine.memory] + self.features_extract_func(task))
-        features = self.features_normalize_func(features) # 这里归一化参数如何设置的？
+        for machine, task, _ in valid_pairs:
+            # 原来: 6维向量[machine.cpu, machine.memory, task.cpu, task.memory, task.duration, task.waiting_task_instances_number]
+            # 修改: 12维向量[machine.cpu, machine.memory, machine.disk, machine.gpu, machine.gpu_memory, machine.gpu_type, 
+            #               task.task_config.cpu, task.task_config.memory, 
+            #               task.task_config.gpu, task.task_config.gpu_memory, task.task_config.gpu_type_require, 
+            #               task.waiting_task_instances_number]
+            current_feature = machine.normal_feature + self.features_extract_normalize_func(task, machine)
+            assert len(current_feature) == self.feature_size
+            features.append(current_feature)
         return features
 
     def __call__(self, cluster, clock):
@@ -40,11 +45,12 @@ class RLAlgorithm(object):
         for machine in machines:
             for task in tasks:
                 if machine.accommodate(task):
-                    all_candidates.append((machine, task))
+                    all_candidates.append((machine, task, task.waiting_task_instances[0]))
+        operator_index = SchedulerOperation.SILENCE
         if len(all_candidates) == 0:
             self.current_trajectory.append(Node(None, None, self.reward_giver.get_reward(), clock))
-            debugPrinter(__file__, sys._getframe(), "当前时间: {0}; 等待队列: {1}; 候选机器和task: [{2}, {3}] ".format(clock, [(task.task_index, task.task_config.instances_number - task.next_instance_pointer) for task in tasks], None, None))
-            return None, None
+            operator_index = SchedulerOperation.OVER_SCHEDULER
+            return operator_index, None, None, None
         else:
             features = self.extract_features(all_candidates)
             features = tf.convert_to_tensor(features, dtype=np.float32)
@@ -56,5 +62,6 @@ class RLAlgorithm(object):
 
             node = Node(features, pair_index, 0, clock) # 四元组, 用于经验回放
             self.current_trajectory.append(node)
-        debugPrinter(__file__, sys._getframe(), "当前时间: {0}; 等待队列: {1}; 候选机器和task: [{2}, {3}] ".format(clock, [(task.task_index, task.task_config.instances_number - task.next_instance_pointer) for task in tasks], all_candidates[pair_index][0].id, all_candidates[pair_index][1].task_index))
-        return all_candidates[pair_index]
+            
+            operator_index = SchedulerOperation.TASK_INSTANCE_SCHEDULER_IN
+        return operator_index, all_candidates[pair_index][0], all_candidates[pair_index][1], all_candidates[pair_index][2]
