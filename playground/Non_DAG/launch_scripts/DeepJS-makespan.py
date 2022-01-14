@@ -34,7 +34,7 @@ csv_reader = CSVReader(jobs_csv)
 jobs_configs = csv_reader.generate(0, jobs_len)
 
 
-n_iter = 2
+n_iter = 4
 n_episode = 2
 np.random.seed(41)
 tf.random.set_random_seed(41)
@@ -49,37 +49,13 @@ model_dir = './agents/%s' % name
 if not os.path.isdir(model_dir):
     os.makedirs(model_dir)
 
-agent = Agent(name, brain, 1, reward_to_go=True, nn_baseline=True, normalize_advantages=True,
+agent = Agent(name, brain, 0.95, reward_to_go=True, nn_baseline=True, normalize_advantages=True,
               model_save_path='%s/model.ckpt' % model_dir)
 
 
 for itr in range(n_iter):
     tic = time.time()
     print("********** Iteration %i ************" % itr)
-    # 多进程和Tensorflow GPU冲突，已解决
-    # processes = []
-
-    # manager = Manager()
-    # trajectories = manager.list([])
-    # makespans = manager.list([])
-    # average_completions = manager.list([])
-    # average_slowdowns = manager.list([])
-
-    # for i in range(n_episode):
-    #     algorithm = RLAlgorithm(agent, reward_giver, features_extract_func=features_extract_func,
-    #                             features_normalize_func=features_normalize_func)
-    #     episode = Episode(machine_configs, jobs_configs, algorithm, None)
-    #     algorithm.reward_giver.attach(episode.simulation)
-    #     p = Process(target=multiprocessing_run,
-    #                 args=(episode, trajectories, makespans, average_completions, average_slowdowns))
-
-    #     processes.append(p)
-
-    # for p in processes:
-    #     p.start()
-
-    # for p in processes:
-    #     p.join()
 
     trajectories = list()
     makespans = list()
@@ -87,6 +63,8 @@ for itr in range(n_iter):
     average_slowdowns = list()
 
     for i in range(n_episode):
+        # 在这个循环中，其实是没有更新agent的参数的，只是随机地结果会不太一样
+        print("********** Episode %i ************" % i)
         algorithm = RLAlgorithm(agent, reward_giver, feature_size, features_extract_normalize_func=features_extract_normalize_func)
         episode = Episode(machine_action_configs, jobs_configs, algorithm, None)
         algorithm.reward_giver.attach(episode.simulation)
@@ -103,7 +81,7 @@ for itr in range(n_iter):
     all_observations = []
     all_actions = []
     all_rewards = []
-    # 这里因为没有并行了，所以需要
+    # n_episode条轨迹[ [(o, a, r, t), ..., (o, a, r, t)], [(o, a, r, t), ..., (o, a, r, t)], ... , [(o, a, r, t), ..., (o, a, r, t)]  ] 
     for trajectory in trajectories:
         infoPrinter(__file__, sys._getframe(),"检查trajectories: size: {0}".format(len(trajectories)))
         observations = []
@@ -128,8 +106,9 @@ for itr in range(n_iter):
         all_actions.append(actions)
         all_rewards.append(rewards)
 
+    # 经验回放更新Agent
     all_q_s, all_advantages = agent.estimate_return(all_rewards)
 
-    agent.update_parameters(all_observations, all_actions, all_advantages)
+    agent.update_parameters(all_observations, all_actions, all_advantages) # 只有在这里才会更新brain的参数
 
 agent.save()

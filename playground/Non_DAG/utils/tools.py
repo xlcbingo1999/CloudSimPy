@@ -1,8 +1,10 @@
 import time
 import numpy as np
 import tensorflow as tf
+import sys
 
 debugLevel = "debug"
+global_filter = "check_reward"
 
 def average_completion(exp):
     completion_time = 0
@@ -30,13 +32,14 @@ def multiprocessing_run(episode, trajectories, makespans, average_completions, a
     np.random.seed(int(time.time()))
     tf.random.set_random_seed(time.time())
     episode.run()
+    debugPrinter(__file__, sys._getframe(), "xiaolinchang: 当前模拟的时间: {0}; 此时更新trajectiories".format(episode.simulation.env.now))
     trajectories.append(episode.simulation.scheduler.algorithm.current_trajectory)
     makespans.append(episode.simulation.env.now)
     # print(episode.simulation.env.now)
     average_completions.append(average_completion(episode))
     average_slowdowns.append(average_slowdown(episode))
 
-def debugPrinter(file, lineno, data=None):
+def debugPrinter(file, lineno, data=None, filter_str=None):
     """
     输出带有文件名和行号的调试信息
     :param file: 对应__file__变量
@@ -44,13 +47,13 @@ def debugPrinter(file, lineno, data=None):
     :param data: 需要输出的信息
     :return:
     """
-    if debugLevel == "debug":
+    if debugLevel == "debug" and filter_str == global_filter:
         fileName = file.split('/')[-1]
         lineno = lineno.f_lineno
 
         print(f'[{fileName} {lineno}] {data}')
 
-def infoPrinter(file, lineno, data=None):
+def infoPrinter(file, lineno, data=None, filter_str=None):
     """
     输出带有文件名和行号的调试信息
     :param file: 对应__file__变量
@@ -58,13 +61,13 @@ def infoPrinter(file, lineno, data=None):
     :param data: 需要输出的信息
     :return:
     """
-    if debugLevel == "info" or debugLevel == "debug":
+    if (debugLevel == "info" or debugLevel == "debug") and filter_str == global_filter:
         fileName = file.split('/')[-1]
         lineno = lineno.f_lineno
 
         print(f'[{fileName} {lineno}] {data}')
 
-def mustPrinter(file, lineno, data=None):
+def mustPrinter(file, lineno, data=None, filter_str=None):
     """
     输出带有文件名和行号的调试信息
     :param file: 对应__file__变量
@@ -72,7 +75,8 @@ def mustPrinter(file, lineno, data=None):
     :param data: 需要输出的信息
     :return:
     """
-    fileName = file.split('/')[-1]
-    lineno = lineno.f_lineno
+    if filter_str == global_filter:
+        fileName = file.split('/')[-1]
+        lineno = lineno.f_lineno
 
-    print(f'[{fileName} {lineno}] {data}')
+        print(f'[{fileName} {lineno}] {data}')

@@ -41,8 +41,13 @@ class RLAlgorithm(object):
         machines = cluster.machines
         tasks = cluster.tasks_which_has_waiting_instance
         all_candidates = []
+        candidate_task = None
+        candidate_machine = None
+        schedule_candidate_task_instance = None
 
+        # 这里其实就是慢的根源，每次都要将所有的machine和task做笛卡尔乘积。可以做一些加速
         for machine in machines:
+            # 当machine的资源所有资源都降低到0的时候，应该可以提前终止，不过感觉优化的速率不会特别高
             for task in tasks:
                 if machine.accommodate(task):
                     all_candidates.append((machine, task, task.waiting_task_instances[0]))
@@ -50,18 +55,26 @@ class RLAlgorithm(object):
         if len(all_candidates) == 0:
             self.current_trajectory.append(Node(None, None, self.reward_giver.get_reward(), clock))
             operator_index = SchedulerOperation.OVER_SCHEDULER
-            return operator_index, None, None, None
         else:
+            # 这里问题是: 为什么每次都只是传入state的局部观察observation，而不是整个state? 用于压缩空间? 
             features = self.extract_features(all_candidates)
             features = tf.convert_to_tensor(features, dtype=np.float32)
             debugPrinter(__file__, sys._getframe(), "所有候选集构成的维度: {0}".format(features.get_shape().as_list()))
+            # 注意: 这里每个迭代中，会有多个Episode，每个Episode得到的结果是不一样的
+            # 强化学习策略函数的返回结果，选择某个index的概率，使用概率的原因是为了支持探索。这是离散化策略学习的正常返回结果。
             logits = self.agent.brain(features)
-            debugPrinter(__file__, sys._getframe(), "经过Brain后维度: {0}".format(logits.get_shape().as_list()))
+            debugPrinter(__file__, sys._getframe(), "经过Brain后得到结果: {0}".format(logits))
+            # 这里是根据logits的概率，采样index结果，之后删除维度为1的dim，转化为numpy数组后返回第一个index
             pair_index = tf.squeeze(tf.multinomial(logits, num_samples=1), axis=1).numpy()[0]
-            debugPrinter(__file__, sys._getframe(), "Action: (machine: {0}; task: {1})".format(all_candidates[pair_index][0].id, all_candidates[pair_index][1].task_index))
+            
 
             node = Node(features, pair_index, 0, clock) # 四元组, 用于经验回放
             self.current_trajectory.append(node)
-            
             operator_index = SchedulerOperation.TASK_INSTANCE_SCHEDULER_IN
-        return operator_index, all_candidates[pair_index][0], all_candidates[pair_index][1], all_candidates[pair_index][2]
+
+            candidate_machine = all_candidates[pair_index][0]
+            candidate_task = all_candidates[pair_index][1]
+            schedule_candidate_task_instance = all_candidates[pair_index][2]
+
+            debugPrinter(__file__, sys._getframe(), "Action: (machine: {0}; task: {1})".format(candidate_machine.id, candidate_task.task_index))
+        return operator_index, candidate_machine, candidate_task, schedule_candidate_task_instance

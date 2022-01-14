@@ -33,6 +33,7 @@ class Agent(object):
 
     def _sum_of_rewards(self, rewards_n):
         """
+            返回的是时间t时刻的损失折扣函数
             Monte Carlo estimation of the Q function.
 
             arguments:
@@ -47,19 +48,21 @@ class Agent(object):
 
             Recall that the expression for the policy gradient PG is
 
-                  PG = E_{tau} [sum_{core=0}^T grad log pi(a_t|s_t) * (Q_t - b_t )]
+                PG = E_{tau} [sum_{core=0}^T grad log pi(a_t|s_t) * (Q_t - b_t )]
+
+                即计算随机梯度 g(s_t, a_t; theta) = PG
 
             where
 
                   tau=(s_0, a_0, ...) is a trajectory,
-                  Q_t is the Q-value at time core, Q^{pi}(s_t, a_t),
-                  and b_t is a baseline which may depend on s_t.
+                  Q_t is the Q-value at time core, Q^{pi}(s_t, a_t), 即动作价值函数
+                  and b_t is a baseline which may depend on s_t. 即baseline
 
             You will write code for two cases, controlled by the flag 'reward_to_go':
 
               Case 1: trajectory-based PG
 
-                  (reward_to_go = False)
+                  (reward_to_go = False), 代表的是ReinForce, 这个公式没怎么看懂啊
 
                   Instead of Q^{pi}(s_t, a_t), we use the total discounted reward summed over
                   entire trajectory (regardless of which time step the Q-value should be for).
@@ -70,7 +73,7 @@ class Agent(object):
 
                   where
 
-                      Ret(tau) = sum_{core'=0}^T gamma^core' r_{core'}.
+                      Ret(tau) = sum_{core'=0}^T gamma^core' r_{core'}. 用u_t去近似Q^{pi}(s_t, a_t)
 
                   Thus, you should compute
 
@@ -78,7 +81,7 @@ class Agent(object):
 
               Case 2: reward-to-go PG
 
-                  (reward_to_go = True)
+                  (reward_to_go = True), 代表的也是ReinForce, 好像这个更标准一些
 
                   Here, you estimate Q^{pi}(s_t, a_t) by the discounted sum of rewards starting
                   from time step core. Thus, you should compute
@@ -92,7 +95,7 @@ class Agent(object):
         for re in rewards_n:
             q = []
             cur_q = 0
-            for reward in reversed(re):
+            for reward in reversed(re): # 折扣回报是最慢的reward打最多的折扣
                 cur_q = cur_q * self.gamma + reward
                 q.append(cur_q)
             q = list(reversed(q))
@@ -147,9 +150,7 @@ class Agent(object):
                 adv_n: shape: (...).
         """
         q_n = self._sum_of_rewards(rewards_n)
-        infoPrinter(__file__, sys._getframe(), "实际返回q_n: {0}".format(q_n))
         adv_n = self._compute_advantage(q_n)
-        infoPrinter(__file__, sys._getframe(), "未计算前返回值adv_n: {0}".format(adv_n))
 
         # Advantage Normalization
         if self.normalize_advantages:
@@ -169,13 +170,12 @@ class Agent(object):
                     advantages__.append((advantage - mean) / (std + np.finfo(np.float32).eps))
                 adv_n__.append(advantages__)
             adv_n = adv_n__
-        infoPrinter(__file__, sys._getframe(), "实际返回adv_n: {0}".format(adv_n))
         return q_n, adv_n
 
     def _loss(self, X, y, adv):
-        logits = self.brain(X) # 用当前的状态做出的决定
-        logprob = - tf.losses.sparse_softmax_cross_entropy(labels=y, logits=logits) # 过往很多次的状态
-        return logprob * adv # adv 目前是0, 所以肯定最后得到的是0. 所以必须要执行多次
+        logits = self.brain(X) # 用当前的状态做出的决定，这里没有执行
+        logprob = - tf.losses.sparse_softmax_cross_entropy(labels=y, logits=logits) # 计算交叉熵
+        return logprob * adv # 交叉熵 * reward函数u_t
 
     def update_parameters(self, all_observations, all_actions, all_advantages):
         """
@@ -191,27 +191,28 @@ class Agent(object):
         """
         loss_values = []
         advantages__ = []
-        for observations, actions, advantages in zip(all_observations, all_actions, all_advantages):
+        for observations, actions, advantages in zip(all_observations, all_actions, all_advantages): # 从并行的n组轨迹中获取
             grads_by_trajectory = []
             cnt = 1
-            for observation, action, advantage in zip(observations, actions, advantages):
-                if observation is None or action is None:
+            for observation, action, advantage in zip(observations, actions, advantages): # 从每组轨迹中获取o, a, r
+                if observation is None or action is None: # 很多时候都会遇到这个，啥也不干
                     continue
+                # 求导上下文管理器!!!
                 with tf.GradientTape() as t:
                     loss_value = - self._loss(observation, [action], advantage)
                 # assert loss_value.numpy() == 0
 
                 grads = t.gradient(loss_value, self.brain.variables)
-                grads_by_trajectory.append(grads)
+                grads_by_trajectory.append(grads) # 梯度计算的数组
                 loss_values.append(loss_value)
                 advantages__.append(advantage)
-
-                if cnt % 1000 == 0:
+                
+                if cnt % 1000 == 0: # 对1000组(o, a, r)做一次更新
                     # assert len(grads_by_trajectory) == 1000
                     self.optimize(grads_by_trajectory)
                     grads_by_trajectory = []
                 cnt += 1
-            if len(grads_by_trajectory) > 0:
+            if len(grads_by_trajectory) > 0: # 完成一个轨迹后，固定进行的一次更新brain
                 self.optimize(grads_by_trajectory)
         
         self.log('loss', np.mean(loss_values), self.global_step)
@@ -226,7 +227,7 @@ class Agent(object):
         for average_grad, variable in zip(average_grads, self.brain.variables):
             assert average_grad.shape == variable.shape
 
-        self.optimizer.apply_gradients(zip(average_grads, self.brain.variables), self.global_step)
+        self.optimizer.apply_gradients(zip(average_grads, self.brain.variables), self.global_step) # 这里对参数进行了更新
 
     def log(self, name, loss_value, step):
         with self.summary_writer.as_default(), tf.contrib.summary.always_record_summaries():
