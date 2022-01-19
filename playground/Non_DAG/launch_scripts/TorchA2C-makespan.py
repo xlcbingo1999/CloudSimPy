@@ -35,13 +35,14 @@ feature_size = 12
 brain = Brain(feature_size).to(device)
 features_extract_normalize_func = features_extract_normalize_func
 
-agent = Agent(brain, 0.95)
 
 name = 'torch-%s-m%d' % (brain.name, machines_number)
 model_dir = './agents/%s' % name
 if not os.path.isdir(model_dir):
     os.makedirs(model_dir)
 
+agent = Agent(brain, 0.95, model_save_path='%s/model.pt' % model_dir)
+# agent.restore()
 
 n_iter = 100
 
@@ -52,3 +53,4 @@ for itr in range(n_iter):
     episode = Episode(machine_action_configs, jobs_configs, algorithm, None)
     episode.run()
     print("result makespan: ", episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode))
+    agent.save()
