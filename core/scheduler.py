@@ -24,9 +24,11 @@ class Scheduler(object):
         self.cluster = simulation.cluster
 
     def make_decision(self):
-        # 这个函数的作用边界是: 执行放置和取消放置，不应该和调度算法耦合！
+        # 尽可能减少不必要的时间消耗，让效率提升
+        current_last_step = self.simulation.is_end_broker
+        # 这个函数的作用边界是: 执行放置和取消放置，不应该和调度算法耦合
         while True:
-            operatorIndex, machine, task, task_instance = self.algorithm(self.cluster, self.env.now)
+            operatorIndex, machine, task, task_instance = self.algorithm(self.cluster, self.env.now, current_last_step and self.simulation.finished)
             if operatorIndex == SchedulerOperation.TASK_INSTANCE_SCHEDULER_IN:
                 debugPrinter(__file__, sys._getframe(), "当前时间: {0}: 算法准备返回operatorIndex:TASK_INSTANCE_SCHEDULER_IN 调度执行 taskInstanceId-machineId: {1}-{2}".format(self.env.now, task_instance.id, machine.id))
                 task.start_task_instance(machine, task_instance)

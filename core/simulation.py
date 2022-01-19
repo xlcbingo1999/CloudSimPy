@@ -31,3 +31,7 @@ class Simulation(object):
         return self.task_broker.destroyed \
                and self.machine_broker.destroyed \
                and len(self.cluster.unfinished_jobs) == 0
+
+    @property
+    def is_end_broker(self):
+        return self.task_broker.destroyed and self.machine_broker.destroyed

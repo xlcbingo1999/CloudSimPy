@@ -37,7 +37,7 @@ class RLAlgorithm(object):
             features.append(current_feature)
         return features
 
-    def __call__(self, cluster, clock):
+    def __call__(self, cluster, clock, is_last_step=False):
         machines = cluster.machines
         tasks = cluster.tasks_which_has_waiting_instance
         all_candidates = []

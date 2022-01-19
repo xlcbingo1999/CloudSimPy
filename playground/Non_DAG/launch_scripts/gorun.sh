@@ -14,6 +14,8 @@ elif [ "$1" = "DeepJS" ]; then
     python DeepJS-makespan.py >> ./results/DeepJS-makespan-${time}.log
 elif [ "$1" = "Tiresias" ]; then
     python TiresiasDLAS-makespan.py >> ./results/TiresiasDLAS-makespan-${time}.log
+elif [ "$1" = "TorchA2C" ]; then
+    python TorchA2C-makespan.py >> ./results/TorchA2C-makespan-${time}.log
 else
     echo "匹配执行出错"
 fi
