@@ -41,7 +41,7 @@ model_dir = './agents/%s' % name
 if not os.path.isdir(model_dir):
     os.makedirs(model_dir)
 
-agent = Agent(brain, 0.95, model_save_path='%s/model.pt' % model_dir)
+agent = Agent(name, brain, 0.95, model_save_path='%s/model.pt' % model_dir)
 # agent.restore()
 
 n_iter = 100
@@ -52,5 +52,11 @@ for itr in range(n_iter):
     algorithm = RLAlgorithm(agent, feature_size, features_extract_normalize_func=features_extract_normalize_func, device=device, update_step_num=12)
     episode = Episode(machine_action_configs, jobs_configs, algorithm, None)
     episode.run()
-    print("result makespan: ", episode.env.now, time.time() - tic, average_completion(episode), average_slowdown(episode))
+    makespan = episode.env.now
+    average_completion_time = average_completion(episode)
+    average_slowdown_time = average_slowdown(episode)
+    print("result makespan: ", makespan, time.time() - tic, average_completion_time, average_slowdown_time)
+    agent.log('makespan', episode.env.now, itr)
+    agent.log('average_completion_time', average_completion_time, itr)
+    agent.log('average_slowdown_time', average_slowdown_time, itr)
     agent.save()

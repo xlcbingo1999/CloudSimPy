@@ -21,9 +21,9 @@
     - [x] 支持instance粒度的调度算法
 - [ ] 优化强化学习
     - [ ] 接入一个新的强化学习算法
+        - [x] A2C
     - [x] 支持Tensorflow-gpu
-    - [ ] 支持Tensorflow 2.0
-    - [ ] 支持Pytorch
+    - [x] 支持Pytorch
 
 
 ## 目前亟待解决的问题
