@@ -1,0 +1,8 @@
+,submit_time,operation,machine_id,cpu_capacity,memory_capacity,disk_capacity,gpu_capacity,gpu_memory_capacity,gpu_type
+0,-1,init_m,7399a758eb02bae1a3621236,96,512,1,0,0,CPU
+1,-1,init_m,75c536d5ba60528b3ef3ae40,96,512,1,0,0,CPU
+2,-1,init_m,0ada2343597a34b8ab9a3d00,96,512,1,2,1,T4
+3,-1,init_m,795e3e50c66cb2a07cbfbd05,96,512,1,2,1,T4
+4,-1,init_m,8b6010469bca955ebf056a33,96,512,1,2,1,T4
+5,-1,init_m,f50778ef4a069ef07dcbf829,96,384,1,8,1,V100
+6,-1,init_m,4ae2b23083a0d27013f30199,96,384,1,8,1,V100

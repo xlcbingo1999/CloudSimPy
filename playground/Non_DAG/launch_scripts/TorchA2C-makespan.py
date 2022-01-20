@@ -44,12 +44,16 @@ if not os.path.isdir(model_dir):
 agent = Agent(name, brain, device, 0.95, model_save_path='%s/model.pt' % model_dir)
 # agent.restore()
 
-n_iter = 100
+n_iter = 2
 
 for itr in range(n_iter):
     print("********** Iteration %i ************" % itr)
     tic = time.time()
-    algorithm = RLAlgorithm(agent, feature_size, features_extract_normalize_func=features_extract_normalize_func, update_step_num=12)
+    algorithm = RLAlgorithm(agent, 
+                            feature_size, 
+                            features_extract_normalize_func=features_extract_normalize_func, 
+                            update_step_num=2,
+                            iter_num=itr+1)
     episode = Episode(machine_action_configs, jobs_configs, algorithm, None)
     episode.run()
     makespan = episode.env.now

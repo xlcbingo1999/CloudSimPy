@@ -14,12 +14,13 @@ class Node(object):
         self.clock = clock
 
 class RLAlgorithm(object):
-    def __init__(self, agent, feature_size, features_extract_normalize_func, update_step_num):
+    def __init__(self, agent, feature_size, features_extract_normalize_func, update_step_num, iter_num):
         super().__init__()
         self.agent = agent
         self.features_extract_normalize_func = features_extract_normalize_func
         self.feature_size = feature_size
         self.device = self.agent.device
+        self.iter_num = iter_num
 
         self.entropy = 0
         self.current_step = 0
@@ -66,7 +67,7 @@ class RLAlgorithm(object):
         return returns
 
 
-    def update_brain(self, all_candidates):
+    def update_brain(self, all_candidates, clock):
         if self.current_step == self.update_step_num and len(all_candidates) > 0: # TODO: 只有在笛卡尔积结果不为空时，才会更新brain
             next_features = self.extract_features(all_candidates)
             next_features = torch.tensor(next_features, dtype=torch.float32).to(self.device)
@@ -82,6 +83,9 @@ class RLAlgorithm(object):
 
             actor_loss  = -(self.log_probs * advantage.detach()).mean() - 0.001 * self.entropy
             critic_loss = advantage.pow(2).mean()
+            
+            self.agent.log('actor_loss', actor_loss, clock * self.iter_num)
+            self.agent.log('critic_loss', critic_loss, clock * self.iter_num)
 
             self.agent.actor_network_optimizer.zero_grad()
             actor_loss.backward(retain_graph=True) # 保留backward后的中间参数。
@@ -107,13 +111,13 @@ class RLAlgorithm(object):
                 if machine.accommodate(task):
                     all_candidates.append((machine, task, task.waiting_task_instances[0]))
         
-        self.update_brain(all_candidates)
+        self.update_brain(all_candidates, clock)
 
         # TODO: 这里应该过滤掉没有任务存在时候的情况，此时不应该判定为集群资源不足，而是一种正常的逻辑?
         # TODO: 上面的这种情况下，按照我们对集群优化的理解，应该是需要执行减少集群资源节点的操作，所以这里是需要商榷的
 
         if len(all_candidates) == 0:
-            reward = torch.FloatTensor([-1]).to(self.device)
+            reward = torch.FloatTensor([-1]).to(self.device) # TODO: 待设计
             sub1done = torch.FloatTensor([1 - is_last_step]).to(self.device)
             value = torch.FloatTensor([0]).to(self.device)
             log_prob = torch.FloatTensor([0]).to(self.device)
@@ -130,7 +134,7 @@ class RLAlgorithm(object):
             action = dist.sample() # 采样Action，单值Tensor
             log_prob = dist.log_prob(action) # 策略目标函数 J(theta) ln Π(a|s; theta) = log p(a|Π^{theta}(s))
             entropy = dist.entropy().mean() # 计算熵的平均值，用于带熵正则的策略学习中
-            reward = torch.FloatTensor([0]).to(self.device)
+            reward = torch.FloatTensor([1]).to(self.device) # TODO: 待设计
             sub1done = torch.FloatTensor([1 - False]).to(self.device)
 
             value = self.agent.brain.critic_network(features)
@@ -148,6 +152,6 @@ class RLAlgorithm(object):
         self.values.append(value)
         self.rewards.append(reward)
         self.masks.append(sub1done)
-
         self.current_step += 1
+
         return operator_index, candidate_machine, candidate_task, schedule_candidate_task_instance
