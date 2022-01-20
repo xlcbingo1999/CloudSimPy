@@ -29,10 +29,10 @@ jobs_configs = csv_reader.generate(0, jobs_len)
 np.random.seed(41)
 
 use_cuda = torch.cuda.is_available()
-device   = torch.device("cuda:1" if use_cuda else "cpu")
+device   = torch.device("cuda:2" if use_cuda else "cpu")
 
 feature_size = 12
-brain = Brain(feature_size).to(device)
+brain = Brain(feature_size)
 features_extract_normalize_func = features_extract_normalize_func
 
 
@@ -41,7 +41,7 @@ model_dir = './agents/%s' % name
 if not os.path.isdir(model_dir):
     os.makedirs(model_dir)
 
-agent = Agent(name, brain, 0.95, model_save_path='%s/model.pt' % model_dir)
+agent = Agent(name, brain, device, 0.95, model_save_path='%s/model.pt' % model_dir)
 # agent.restore()
 
 n_iter = 100
@@ -49,7 +49,7 @@ n_iter = 100
 for itr in range(n_iter):
     print("********** Iteration %i ************" % itr)
     tic = time.time()
-    algorithm = RLAlgorithm(agent, feature_size, features_extract_normalize_func=features_extract_normalize_func, device=device, update_step_num=12)
+    algorithm = RLAlgorithm(agent, feature_size, features_extract_normalize_func=features_extract_normalize_func, update_step_num=12)
     episode = Episode(machine_action_configs, jobs_configs, algorithm, None)
     episode.run()
     makespan = episode.env.now

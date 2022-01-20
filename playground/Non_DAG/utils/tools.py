@@ -1,10 +1,9 @@
 import time
 import numpy as np
-import tensorflow as tf
 import sys
 
 debugLevel = "debug"
-global_filter = "check_reward"
+global_filter = None
 
 def average_completion(exp):
     completion_time = 0
@@ -30,6 +29,7 @@ def average_slowdown(exp):
 
 def multiprocessing_run(episode, trajectories, makespans, average_completions, average_slowdowns):
     np.random.seed(int(time.time()))
+    import tensorflow as tf
     tf.random.set_random_seed(time.time())
     episode.run()
     debugPrinter(__file__, sys._getframe(), "xiaolinchang: 当前模拟的时间: {0}; 此时更新trajectiories".format(episode.simulation.env.now))

@@ -14,12 +14,12 @@ class Node(object):
         self.clock = clock
 
 class RLAlgorithm(object):
-    def __init__(self, agent, feature_size, features_extract_normalize_func, device, update_step_num):
+    def __init__(self, agent, feature_size, features_extract_normalize_func, update_step_num):
         super().__init__()
         self.agent = agent
         self.features_extract_normalize_func = features_extract_normalize_func
         self.feature_size = feature_size
-        self.device = device
+        self.device = self.agent.device
 
         self.entropy = 0
         self.current_step = 0
@@ -57,7 +57,7 @@ class RLAlgorithm(object):
         self.masks     = []
         self.current_step = 0
 
-    def compute_returns(self, next_value, rewards, masks, gamma):
+    def compute_returns(self, next_value, rewards, masks, gamma): # 没问题
         R = next_value
         returns = []
         for step in reversed(range(len(rewards))):
@@ -71,7 +71,7 @@ class RLAlgorithm(object):
             next_features = self.extract_features(all_candidates)
             next_features = torch.tensor(next_features, dtype=torch.float32).to(self.device)
 
-            _, next_value = self.agent.brain(next_features)
+            next_value = self.agent.brain.critic_network(next_features)
             final_returns = self.compute_returns(next_value, self.rewards, self.masks, self.agent.gamma)
 
             self.log_probs = torch.cat(self.log_probs)
@@ -80,15 +80,17 @@ class RLAlgorithm(object):
 
             advantage = final_returns - self.values
 
-            actor_loss  = -(self.log_probs * advantage.detach()).mean()
+            actor_loss  = -(self.log_probs * advantage.detach()).mean() - 0.001 * self.entropy
             critic_loss = advantage.pow(2).mean()
 
-            loss = actor_loss + 0.5 * critic_loss - 0.001 * self.entropy
-
-            self.agent.optimizer.zero_grad()
-            loss.backward()
-            self.agent.optimizer.step()
+            self.agent.actor_network_optimizer.zero_grad()
+            actor_loss.backward(retain_graph=True) # 保留backward后的中间参数。
+            self.agent.actor_network_optimizer.step()
             
+            self.agent.value_network_optimizer.zero_grad()
+            critic_loss.backward()
+            self.agent.value_network_optimizer.step()
+
             self.reset_rl()
 
 
@@ -111,8 +113,8 @@ class RLAlgorithm(object):
         # TODO: 上面的这种情况下，按照我们对集群优化的理解，应该是需要执行减少集群资源节点的操作，所以这里是需要商榷的
 
         if len(all_candidates) == 0:
-            reward = -1
-            done = is_last_step
+            reward = torch.FloatTensor([-1]).to(self.device)
+            sub1done = torch.FloatTensor([1 - is_last_step]).to(self.device)
             value = torch.FloatTensor([0]).to(self.device)
             log_prob = torch.FloatTensor([0]).to(self.device)
             entropy = 0
@@ -124,12 +126,14 @@ class RLAlgorithm(object):
             features = torch.tensor(features, dtype=torch.float32).to(self.device)
             debugPrinter(__file__, sys._getframe(), "所有候选集构成的维度: {0}".format(features.shape))
 
-            dist, value = self.agent.brain(features)
-            action = dist.sample()
-            log_prob = dist.log_prob(action)
-            entropy = dist.entropy().mean()
-            reward = 0
-            done = False
+            dist = self.agent.brain.actor_network(features)
+            action = dist.sample() # 采样Action，单值Tensor
+            log_prob = dist.log_prob(action) # 策略目标函数 J(theta) ln Π(a|s; theta) = log p(a|Π^{theta}(s))
+            entropy = dist.entropy().mean() # 计算熵的平均值，用于带熵正则的策略学习中
+            reward = torch.FloatTensor([0]).to(self.device)
+            sub1done = torch.FloatTensor([1 - False]).to(self.device)
+
+            value = self.agent.brain.critic_network(features)
 
             candidate_machine = all_candidates[action][0]
             candidate_task = all_candidates[action][1]
@@ -142,9 +146,8 @@ class RLAlgorithm(object):
         self.entropy += entropy
         self.log_probs.append(log_prob)
         self.values.append(value)
-        self.rewards.append(torch.FloatTensor([reward]).to(self.device))
-        
-        self.masks.append(torch.FloatTensor([1 - done]).to(self.device))
+        self.rewards.append(reward)
+        self.masks.append(sub1done)
 
         self.current_step += 1
         return operator_index, candidate_machine, candidate_task, schedule_candidate_task_instance

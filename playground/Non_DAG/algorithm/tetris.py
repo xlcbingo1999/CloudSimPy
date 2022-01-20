@@ -14,7 +14,7 @@ class Tetris(Algorithm):
             task_features.append([task.task_config.cpu, task.task_config.memory, task.task_config.gpu, task.task_config.gpu_memory])
         return np.argmax(np.sum(np.array(machine_features) * np.array(task_features), axis=1), axis=0)
 
-    def __call__(self, cluster, clock):
+    def __call__(self, cluster, clock, is_last_step=False):
         machines = cluster.machines
         tasks = cluster.tasks_which_has_waiting_instance
         valid_pairs = []

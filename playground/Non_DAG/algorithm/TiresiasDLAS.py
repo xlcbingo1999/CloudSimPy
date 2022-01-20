@@ -13,7 +13,7 @@ class TiresiasDLASAlgorithm(Algorithm):
 
         self.solve_starvation = solve_starvation
 
-    def __call__(self, cluster, clock):
+    def __call__(self, cluster, clock, is_last_step=False):
         # 每个clock会执行一次算法
         if self.last_clock is None or self.last_clock != clock:
             self.update_pri_operator_finished = False

@@ -4,7 +4,7 @@ from playground.Non_DAG.utils.tools import debugPrinter
 
 class OptimusAlgorithm(Algorithm):
     # 还没改完，但是有问题，因为需要ps-worker架构的设计
-    def __call__(self, cluster, clock):
+    def __call__(self, cluster, clock, is_last_step=False):
         machines = cluster.machines # 总机器
         tasks = cluster.tasks_which_has_waiting_instance # 等待队列
         candidate_task = None

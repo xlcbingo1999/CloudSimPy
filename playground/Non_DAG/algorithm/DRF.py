@@ -2,7 +2,7 @@ from core.alogrithm import Algorithm
 from core.scheduler import SchedulerOperation
 
 class DRF(Algorithm):
-    def __call__(self, cluster, clock):
+    def __call__(self, cluster, clock, is_last_step=False):
         machines = cluster.machines
         unfinished_tasks = cluster.unfinished_tasks
         candidate_task = None
