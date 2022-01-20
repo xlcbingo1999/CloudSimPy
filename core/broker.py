@@ -2,6 +2,8 @@ from core.job import Job
 from core.machine import MachineConfig
 import sys
 from playground.Non_DAG.utils.tools import debugPrinter, infoPrinter
+import time
+from tqdm import tqdm, trange
 
 class JobBroker(object):
     job_cls = Job
@@ -18,7 +20,8 @@ class JobBroker(object):
         self.cluster = simulation.cluster
 
     def run(self):
-        for job_config in self.job_configs:
+        for i in tqdm(range(len(self.job_configs))):
+            job_config = self.job_configs[i]
             assert job_config.submit_time >= self.env.now
             yield self.env.timeout(job_config.submit_time - self.env.now)
             infoPrinter(__file__, sys._getframe(),"xiaolinchang用户提交任务: 当前时间: " + str(self.env.now) + str(job_config.printState()) + "\n\n")
@@ -48,7 +51,8 @@ class MachineBroker(object):
                 self.cluster.add_machines([machine_config])
 
     def run(self):
-        for machine_action_config in self.machine_action_configs:
+        for i in tqdm(range(len(self.machine_action_configs))):
+            machine_action_config = self.machine_action_configs[i]
             if machine_action_config.operation == 'init_m':
                 continue
             assert machine_action_config.submite_time >= self.env.now
